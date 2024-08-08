@@ -55,16 +55,28 @@ threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 #   print(l)
 #   print(m_new)
 
+# Check if training and testing use the same variables
+def check_same_variables(var_list1, var_list2):
+    assert len(var_list1) == len(var_list2), "The number of variables does not match"
+    for v1, v2 in zip(var_list1, var_list2):
+        assert v1 is v2, f"Variable {v1.name} and {v2.name} are not the same"
+
+check_same_variables(variables, test_variables)
 
 # Run CABS
 for i in range(num_steps):
-  _, m_new, l = sess.run([sgd_step, bs_new, loss])
-  print(f'Step: {i + 1}, Train Loss: {l:.4f}, Batch Size: {m_new}')
+    _, m_new, l, test_acc, test_l = sess.run([sgd_step, bs_new, loss, test_accuracy, test_loss])
+    print(f'Step: {i}, Train Loss: {l}, Test Loss: {test_l}, Test Accuracy: {test_acc}, Batch Size: {m_new}')
 
-  if (i + 1) % eval_interval == 0:
-    sess.run(test_iterator.initializer)
-    test_acc, test_l = sess.run([test_accuracy, test_loss])
-    print(f'Step: {i + 1}, Test Accuracy: {test_acc:.4f}, Test Loss: {test_l:.4f}')
+# Run CABS
+# for i in range(num_steps):
+#   _, m_new, l = sess.run([sgd_step, bs_new, loss])
+#   print(f'Step: {i + 1}, Train Loss: {l:.4f}, Batch Size: {m_new}')
+#
+#   if (i + 1) % eval_interval == 0:
+#     sess.run(test_iterator.initializer)
+#     test_acc, test_l = sess.run([test_accuracy, test_loss])
+#     print(f'Step: {i + 1}, Test Accuracy: {test_acc:.4f}, Test Loss: {test_l:.4f}')
 
 # Stop queues
 coord.request_stop()
