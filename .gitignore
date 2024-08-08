@@ -1,5 +1,6 @@
 *.pyc
 examples/data
 ./.idea
+*/.idea/*
 
 */data
