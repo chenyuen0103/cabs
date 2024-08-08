@@ -32,19 +32,8 @@ losses, variables = model.set_up_model(images, labels)
 
 
 # Test data
-test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=global_bs)
-
-# Reuse the same variables for the test model
-with tf.variable_scope(tf.get_variable_scope(), reuse=True):
-    test_logits, test_variables = model.set_up_model(test_images, test_labels)
-
-
-def check_same_variables(var_list1, var_list2):
-  assert len(var_list1) == len(var_list2), "The number of variables does not match"
-  for v1, v2 in zip(var_list1, var_list2):
-    assert v1 is v2, f"Variable {v1.name} and {v2.name} are not the same"
-
-
+test_images, test_labels, test_iterator = cifar10.inputs(eval_data=True, batch_size=global_bs)
+test_logits = model.set_up_model(test_images, variables)
 test_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=test_logits, labels=test_labels))
 test_accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(test_logits, axis=1), test_labels), tf.float32))
 
@@ -73,8 +62,7 @@ for i in range(num_steps):
   print(f'Step: {i + 1}, Train Loss: {l:.4f}, Batch Size: {m_new}')
 
   if (i + 1) % eval_interval == 0:
-    # Check if training and testing use the same variables
-    check_same_variables(variables, test_variables)
+    sess.run(test_iterator.initializer)
     test_acc, test_l = sess.run([test_accuracy, test_loss])
     print(f'Step: {i + 1}, Test Accuracy: {test_acc:.4f}, Test Loss: {test_l:.4f}')
 
