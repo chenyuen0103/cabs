@@ -37,6 +37,7 @@ with tf.variable_scope(tf.get_variable_scope(), reuse=True):
 # Check is using the same variables
 assert len(variables) == len(tf.trainable_variables())
 for v1, v2 in zip(variables, tf.trainable_variables()):
+  breakpoint()
   assert v1 == v2
 
 
