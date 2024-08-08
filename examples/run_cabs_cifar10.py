@@ -29,6 +29,18 @@ global_bs = tf.Variable(tf.constant(initial_batch_size, dtype=tf.int32))
 images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
 losses, variables = model.set_up_model(images, labels)
 
+test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
+# Make sure to use the same variables for training and testing
+with tf.variable_scope(tf.get_variable_scope(), reuse=True):
+  test_losses, _ = model.set_up_model(test_images, test_labels)
+
+# Check is using the same variables
+assert len(variables) == len(tf.trainable_variables())
+for v1, v2 in zip(variables, tf.trainable_variables()):
+  assert v1 == v2
+
+
+
 # Set up CABS optimizer
 opt = CABSOptimizer(learning_rate, bs_min, bs_max)
 sgd_step, bs_new, loss = opt.minimize(losses, variables, global_bs)
