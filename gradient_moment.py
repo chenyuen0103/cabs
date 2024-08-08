@@ -38,6 +38,7 @@ https://arxiv.org/abs/1612.05086.
 
 import tensorflow as tf
 from tensorflow.python.ops import gen_array_ops
+from tensorflow.python.ops import array_ops
 
 VALID_TYPES = ["MatMul", "Conv2D", "Add","AddV2"]
 VALID_REGULARIZATION_TYPES = ["L2Loss"]
@@ -218,6 +219,7 @@ def _AddGradMom(op, b, out_grad, batch_size, mom=2):
     x = op.inputs[0]
     sx = tf.shape(x)
     sy = tf.shape(b)
-    rx, ry = gen_array_ops._broadcast_gradient_args(sx, sy)
+    # rx, ry = gen_array_ops._broadcast_gradient_args(sx, sy)
+    rx, ry = array_ops.broadcast_gradient_args(sx, sy)
     raw_mom = tf.reshape(tf.reduce_sum(out_grad_pow, ry), sy)
   return tf.multiply(batch_size, raw_mom)
