@@ -35,6 +35,7 @@ with tf.variable_scope(tf.get_variable_scope(), reuse=True):
   test_losses, _ = model.set_up_model(test_images, test_labels)
 
 # Check is using the same variables
+breakpoint()
 assert len(variables) == len(tf.trainable_variables())
 for v1, v2 in zip(variables, tf.trainable_variables()):
   breakpoint()
