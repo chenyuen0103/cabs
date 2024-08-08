@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import tensorflow as tf
 import cifar10_adaptive_batchsize as cifar10
-
+tf.disable_v2_behavior()
 from cabs import CABSOptimizer
 
 #### Specify training specifics here ##########################################
