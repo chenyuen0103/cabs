@@ -204,7 +204,7 @@ def _AddGradMom(op, b, out_grad, batch_size, mom=2):
       :batch_size: Batch size ``n`` (constant integer or scalar int tf.Tensor)
       :mom: Integer moment desired (defaults to 2)"""
   
-  assert op.type == "Add"
+  assert op.type in ["Add", "AddV2"]
   
   out_grad_pow = tf.pow(out_grad, mom)
   
