@@ -39,7 +39,7 @@ https://arxiv.org/abs/1612.05086.
 import tensorflow as tf
 from tensorflow.python.ops import gen_array_ops
 
-VALID_TYPES = ["MatMul", "Conv2D", "Add"]
+VALID_TYPES = ["MatMul", "Conv2D", "Add","AddV2"]
 VALID_REGULARIZATION_TYPES = ["L2Loss"]
 
 def _check_and_sort_ops(op_list):
@@ -124,7 +124,7 @@ def _GradMom(op, v, out_grad, batch_size, mom=2):
       return _MatMulGradMom(op, v, out_grad, batch_size, mom)
     elif op.type == "Conv2D":
       return _Conv2DGradMom(op, v, out_grad, batch_size, mom)
-    elif op.type == "Add":
+    elif op.type in ["Add", "AddV2"]:
       return _AddGradMom(op, v, out_grad, batch_size, mom)
     else:
       raise ValueError("Don't know how to compute gradient moment for "
