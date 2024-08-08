@@ -16,6 +16,9 @@ from cabs import CABSOptimizer
 
 #### Specify training specifics here ##########################################
 from models import cifar10_2conv_3dense as model
+import pdb
+
+
 num_steps = 8000
 learning_rate = 0.1
 initial_batch_size = 16
@@ -35,10 +38,9 @@ with tf.variable_scope(tf.get_variable_scope(), reuse=True):
   test_losses, _ = model.set_up_model(test_images, test_labels)
 
 # Check is using the same variables
-breakpoint()
+pdb.set_trace()
 assert len(variables) == len(tf.trainable_variables())
 for v1, v2 in zip(variables, tf.trainable_variables()):
-  breakpoint()
   assert v1 == v2
 
 
