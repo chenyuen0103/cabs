@@ -27,7 +27,7 @@ eval_interval = 100
 # Set up model
 tf.reset_default_graph()
 global_bs = tf.Variable(tf.constant(initial_batch_size, dtype=tf.int32))
-images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
+images, labels = cifar10.inputs(eval_data=False, batch_size=10000)
 losses, variables = model.set_up_model(images, labels)
 
 
