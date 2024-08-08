@@ -33,10 +33,9 @@ losses, variables = model.set_up_model(images, labels)
 
 # Test data
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=global_bs)
-test_logits = model.build_model(test_images, variables, is_training=False)
+test_logits, _ = model.set_up_model(test_images, test_labels, is_training=False)
 test_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=test_logits, labels=test_labels))
 test_accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(test_logits, axis=1), test_labels), tf.float32))
-
 
 # Set up CABS optimizer
 opt = CABSOptimizer(learning_rate, bs_min, bs_max)
