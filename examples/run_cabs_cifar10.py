@@ -9,7 +9,8 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import cifar10_adaptive_batchsize as cifar10
 tf.disable_v2_behavior()
 from cabs import CABSOptimizer
@@ -27,13 +28,16 @@ eval_interval = 100
 # Set up model
 tf.reset_default_graph()
 global_bs = tf.Variable(tf.constant(initial_batch_size, dtype=tf.int32))
-images, labels = cifar10.inputs(eval_data=False, batch_size=10000)
+images, labels, train_iterator = cifar10.inputs(eval_data=False, batch_size=global_bs)
+# images, labels = cifar10.inputs(eval_data=False, batch_size=10000)
 losses, variables = model.set_up_model(images, labels)
 
 
 # Test data
 test_images, test_labels, test_iterator = cifar10.inputs(eval_data=True, batch_size=global_bs)
-test_logits = model.set_up_model(test_images, variables)
+with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
+    test_logits, _ = model.set_up_model(test_images, variables)
+
 test_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=test_logits, labels=test_labels))
 test_accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(test_logits, axis=1), test_labels), tf.float32))
 
