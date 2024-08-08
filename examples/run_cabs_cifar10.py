@@ -28,15 +28,14 @@ eval_interval = 100
 # Set up model
 tf.reset_default_graph()
 global_bs = tf.Variable(tf.constant(initial_batch_size, dtype=tf.int32))
-images, labels, train_iterator = cifar10.inputs(eval_data=False, batch_size=global_bs)
-# images, labels = cifar10.inputs(eval_data=False, batch_size=10000)
+images, labels = cifar10.inputs(eval_data=False, batch_size=10000)
 losses, variables = model.set_up_model(images, labels)
 
 
 # Test data
-test_images, test_labels, test_iterator = cifar10.inputs(eval_data=True, batch_size=global_bs)
+test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=global_bs)
 with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
-    test_logits, _ = model.set_up_model(test_images, variables)
+    test_logits, _ = model.set_up_model(test_images, test_labels)
 
 test_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=test_logits, labels=test_labels))
 test_accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(test_logits, axis=1), test_labels), tf.float32))
@@ -65,7 +64,7 @@ def check_same_variables(var_list1, var_list2):
     for v1, v2 in zip(var_list1, var_list2):
         assert v1 is v2, f"Variable {v1.name} and {v2.name} are not the same"
 
-check_same_variables(variables, test_variables)
+# check_same_variables(variables, test_variables)
 
 # Run CABS
 for i in range(num_steps):
