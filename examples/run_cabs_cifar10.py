@@ -29,12 +29,22 @@ bs_max = 2048
 # Set up model
 tf.reset_default_graph()
 global_bs = tf.Variable(tf.constant(initial_batch_size, dtype=tf.int32))
-images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
-losses, variables = model.set_up_model(images, labels)
+# images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
+# losses, variables = model.set_up_model(images, labels)
+#
+# test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
+# # Make sure to use the same variables for training and testing
+# with tf.variable_scope(tf.get_variable_scope(), reuse=True):
+#   test_losses, _ = model.set_up_model(test_images, test_labels)
 
-test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
-# Make sure to use the same variables for training and testing
-with tf.variable_scope(tf.get_variable_scope(), reuse=True):
+
+with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
+  # Training model
+  images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
+  losses, variables = model.set_up_model(images, labels)
+
+  # Testing model
+  test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
   test_losses, _ = model.set_up_model(test_images, test_labels)
 
 # Check is using the same variables
