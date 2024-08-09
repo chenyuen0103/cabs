@@ -129,28 +129,12 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     grads, moms = gm.grads_and_grad_moms(loss, input_batch_size, var_list)
     grads_squared = [tf.square(g) for g in grads]
     # Step 1: Compute the squared L2 norm of the sum of gradients
-    sum_grads_squared_norm = tf.add_n([tf.reduce_sum(tf.square(g)) for g in grads])
+    individual_grad_norm_sum = tf.reduce_sum(moms)
+    grad_sum_norm = tf.reduce_sum(grads_squared)
 
-    # Step 2: Compute the sum of squared L2 norms (which is stored in moms)
-    sum_individual_squared_norms = tf.add_n([tf.reduce_sum(m) for m in moms])
-
-    # Step 3: Calculate the ratio
-    ratio = sum_individual_squared_norms / sum_grads_squared_norm
-
-    # Ensure the same number of variables in grads and moms
-    assert len(grads) == len(moms), "The number of gradients and moments should be the same."
-
-    # Check the dimensions of each corresponding gradient and moment
-    for i, (g, m) in enumerate(zip(grads, moms)):
-      g_shape = tf.shape(g)
-      m_shape = tf.shape(m)
-
-      with tf.Session() as sess:
-        g_shape_value, m_shape_value = sess.run([g_shape, m_shape])
-        print(f"Gradient {i} shape: {g_shape_value}")
-        print(f"Moment {i} shape: {m_shape_value}")
-        pdb.set_trace()
-        assert g_shape_value == m_shape_value, f"Shape mismatch in gradient and moment for variable {i}."
+    grad_diveristy = tf.divide(individual_grad_norm_sum, grad_sum_norm)
+    print("grad_diveristy", grad_diveristy)
+    pdb.set_trace()
 
 
     # Compute gradient variance and feed it into a running average
