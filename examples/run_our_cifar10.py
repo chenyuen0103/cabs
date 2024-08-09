@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath('..'))
 import tensorflow as tf
 import cifar10_adaptive_batchsize as cifar10
 
-from cabs import CABSOptimizer
+from ours import OurOptimizer
 
 #### Specify training specifics here ##########################################
 from models import cifar10_2conv_3dense as model
@@ -35,7 +35,7 @@ losses, variables, acc = model.set_up_model(images, labels)
 #_, _, test_accuracy = model.set_up_model(test_images, test_labels)
 
 # Set up CABS optimizer
-opt = CABSOptimizer(learning_rate, bs_min, bs_max)
+opt = OurOptimizer(learning_rate, bs_min, bs_max)
 sgd_step, bs_new, loss, accuracy = opt.minimize(losses, acc, variables, global_bs)
 
 # Initialize variables and start queues
