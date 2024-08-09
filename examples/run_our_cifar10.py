@@ -36,7 +36,7 @@ losses, variables, acc = model.set_up_model(images, labels)
 
 # Set up CABS optimizer
 opt = OurOptimizer(learning_rate, bs_min, bs_max)
-sgd_step, bs_new, loss, accuracy = opt.minimize(losses, acc, variables, global_bs)
+sgd_step, bs_new, grad_div, loss, accuracy = opt.minimize(losses, acc, variables, global_bs)
 
 # Initialize variables and start queues
 sess = tf.Session()
@@ -59,7 +59,9 @@ def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
 
 # Run CABS
 for i in range(num_steps):
-    _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
+    # _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
+    _, m_new, grad_div, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
+    sgd_step, bs_new, grad_diversity, loss, accuracy
     print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
 
     if i % 100 == 0:

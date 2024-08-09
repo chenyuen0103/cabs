@@ -135,35 +135,18 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     grad_sum_norm = tf.reduce_sum([tf.reduce_sum(grad) for grad in grads])
     grad_diversity = tf.divide(individual_grad_norm_sum, grad_sum_norm)
     # Start a TensorFlow session
-    with tf.Session() as sess:
-      # Initialize all variables
-      sess.run(tf.global_variables_initializer())
-
-      # Run the computations and fetch the values
-      individual_grad_norm_sum_value, grad_sum_norm_value, grad_diversity_value = sess.run(
-        [individual_grad_norm_sum, grad_sum_norm, grad_diversity]
-      )
-
-      # Print the results
-      print("individual_grad_norm_sum:", individual_grad_norm_sum_value)
-      print("grad_sum_norm:", grad_sum_norm_value)
-      print("grad_diversity:", grad_diversity_value)
-
-      # Optionally, you can also set a breakpoint to inspect these values
-      pdb.set_trace()
-
     # Compute gradient variance and feed it into a running average
-    grad_variances = [(m-g2) for g2, m in zip(grads_squared, moms)]
-    xi = tf.add_n([tf.reduce_sum(gv) for gv in grad_variances])
-    update_avgs.append(xi_avg.assign(mu*xi_avg + (1.0-mu)*xi))
+    # grad_variances = [(m-g2) for g2, m in zip(grads_squared, moms)]
+    # xi = tf.add_n([tf.reduce_sum(gv) for gv in grad_variances])
+    # update_avgs.append(xi_avg.assign(mu*xi_avg + (1.0-mu)*xi))
     
     # Compute the new batch size (with a dependency that makes sure that the
     # moving averages are updated beforehand)
-    with tf.control_dependencies(update_avgs):
-      bs_new_raw = c*lr*tf.divide(xi_avg, loss_avg+eps)
+    # with tf.control_dependencies(update_avgs):
+    #   bs_new_raw = c*lr*tf.divide(xi_avg, loss_avg+eps)
     
     # Round the new batch size
-    bs_new_rounded = tf.round(bs_new_raw)
+    bs_new_rounded = tf.round(grad_diversity)
     bs_new = tf.clip_by_value(bs_new_rounded, bs_min, bs_max)
     bs_new = tf.to_int32(bs_new)
         
@@ -181,6 +164,6 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     # Return the SGD update op and the new (rounded) batch size
     # In debug mode, additionally return the various intermediate quantities
     if self._debug:
-      return sgd_step, bs_new, bs_new_raw, loss_avg, loss, xi_avg, xi
+      return sgd_step, bs_new,  loss_avg, loss, xi_avg, xi
     else:
-      return sgd_step, bs_new, loss, accuracy
+      return sgd_step, bs_new, grad_diversity, loss, accuracy
