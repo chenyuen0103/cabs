@@ -138,7 +138,7 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     # Compute gradient diversity and feed it into a running average
     # grad_variances = [(m-g2) for g2, m in zip(grads_squared, moms)]
     # xi = tf.add_n([tf.reduce_sum(gv) for gv in grad_variances])
-    update_avgs.append(xi_avg.assign(mu*xi_avg + (1.0-mu)*grad_diversity))
+    # update_avgs.append(xi_avg.assign(mu*xi_avg + (1.0-mu)*grad_diversity))
     
     # Compute the new batch size (with a dependency that makes sure that the
     # moving averages are updated beforehand)
@@ -146,8 +146,8 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     #   bs_new_raw = c*lr*tf.divide(xi_avg, loss_avg+eps)
     #
     # Round the new batch size
-    # bs_new_rounded = tf.round(grad_diversity)
-    bs_new_rounded = tf.round(xi_avg)
+    bs_new_rounded = tf.round(grad_diversity)
+    # bs_new_rounded = tf.round(xi_avg)
     bs_new = tf.clip_by_value(bs_new_rounded, bs_min, bs_max)
     bs_new = tf.to_int32(bs_new)
         
@@ -167,4 +167,4 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     if self._debug:
       return sgd_step, bs_new,  loss_avg, loss, xi_avg, xi
     else:
-      return sgd_step, bs_new, xi_avg, loss, accuracy
+      return sgd_step, bs_new, grad_diversity, loss, accuracy
