@@ -17,7 +17,7 @@ import cifar100_adaptive_batchsize as cifar100
 from cabs import CABSOptimizer
 
 #### Specify training specifics here ##########################################
-from models import cifar10_2conv_3dense as model
+from models import cifar100_2conv_3dense as model
 num_steps = 8000
 learning_rate = 0.1
 initial_batch_size = 16

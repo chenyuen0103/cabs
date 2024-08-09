@@ -57,3 +57,21 @@ def set_up_model(images, labels):
   accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
 
   return losses, [W_conv1, b_conv1, W_conv2, b_conv2, W_fc1, b_fc1, W_fc2, b_fc2, W_fc3, b_fc3], accuracy
+
+def evaluate(sess, images_test, labels_test, batch_size, loss_op, accuracy_op):
+    total_loss = 0
+    total_accuracy = 0
+    num_batches = len(images_test) // batch_size
+    
+    for i in range(num_batches):
+        batch_images = images_test[i * batch_size:(i + 1) * batch_size]
+        batch_labels = labels_test[i * batch_size:(i + 1) * batch_size]
+        
+        loss, accuracy = sess.run([loss_op, accuracy_op], feed_dict={images: batch_images, labels: batch_labels})
+        total_loss += loss
+        total_accuracy += accuracy
+    
+    average_loss = total_loss / num_batches
+    average_accuracy = total_accuracy / num_batches
+    
+    return average_loss, average_accuracy
