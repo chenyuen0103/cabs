@@ -79,6 +79,9 @@ def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
     test_acc = sess.run(accuracy_op, feed_dict={images: test_imgs, labels: test_lbls})
     return test_acc
 
+
+
+m_new = initial_batch_size
 # Run CABS
 for i in range(num_steps):
     # _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
