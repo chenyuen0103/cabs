@@ -27,29 +27,64 @@ validation_split = 0.2  # 20% for validation
 buffer_size = 50000  # Size of the dataset for shuffling
 ###############################################################################
 
-# Set up model
-tf.reset_default_graph()
-global_bs = tf.Variable(tf.constant(initial_batch_size, dtype=tf.int32))
+# # Set up model
+# tf.reset_default_graph()
+# global_bs = tf.Variable(tf.constant(initial_batch_size, dtype=tf.int32))
+#
+# total_train_samples = 50000
+#
+# # Load and shuffle the dataset
+# dataset = cifar10.inputs(eval_data=False, batch_size=global_bs)
+# dataset = dataset.shuffle(buffer_size=buffer_size, seed=42)
+#
+# # Split the dataset
+# train_size = int((1 - validation_split) * total_train_samples)
+# val_size = total_train_samples - train_size
+#
+# train_dataset = dataset.take(train_size)
+# val_dataset = dataset.skip(train_size).take(val_size)
+#
+# train_iterator = tf.data.make_initializable_iterator(train_dataset)
+# val_iterator = tf.data.make_initializable_iterator(val_dataset)
+#
+#
+#
+#
+# images, labels = train_iterator.get_next()
+# val_images, val_labels = val_iterator.get_next()
 
-total_train_samples = 50000
 
-# Load and shuffle the dataset
-dataset = cifar10.inputs(eval_data=False, batch_size=global_bs)
+
+# Load CIFAR-10 dataset
+(images, labels), (test_images, test_labels) = tf.keras.datasets.cifar10.load_data()
+
+# Convert to tf.data.Dataset
+dataset = tf.data.Dataset.from_tensor_slices((images, labels))
+
+# Shuffle the dataset
+buffer_size = len(images)
 dataset = dataset.shuffle(buffer_size=buffer_size, seed=42)
 
-# Split the dataset
-train_size = int((1 - validation_split) * total_train_samples)
-val_size = total_train_samples - train_size
+# Split the dataset into training and validation sets
+validation_split = 0.2
+train_size = int((1 - validation_split) * buffer_size)
+val_size = buffer_size - train_size
 
 train_dataset = dataset.take(train_size)
 val_dataset = dataset.skip(train_size).take(val_size)
 
-train_iterator = tf.data.make_initializable_iterator(train_dataset)
-val_iterator = tf.data.make_initializable_iterator(val_dataset)
+# Batch and prefetch the datasets
+batch_size = 128  # Example batch size
+train_dataset = train_dataset.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+val_dataset = val_dataset.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
+# Create iterators
+train_iterator = tf.compat.v1.data.make_initializable_iterator(train_dataset)
+val_iterator = tf.compat.v1.data.make_initializable_iterator(val_dataset)
+
+# Get the next batch
 images, labels = train_iterator.get_next()
 val_images, val_labels = val_iterator.get_next()
-
 
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 losses, variables, acc = model.set_up_model(images, labels)
