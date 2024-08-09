@@ -41,4 +41,9 @@ def set_up_model():
   b_fc2 = bias_variable([10])
   h_fc2 = tf.nn.softmax(tf.matmul(h_fc1, W_fc2) + b_fc2)
   losses = -tf.reduce_sum(y*tf.log(h_fc2), reduction_indices=[1])
-  return losses, [X, y], [W_conv1, b_conv1, W_conv2, b_conv2, W_fc1, b_fc1, W_fc2, b_fc2]
+
+  # Accuracy calculation
+  correct_predictions = tf.equal(tf.argmax(h_fc2, 1), tf.argmax(y, 1))
+  accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
+
+  return losses, [X, y], [W_conv1, b_conv1, W_conv2, b_conv2, W_fc1, b_fc1, W_fc2, b_fc2], accuracy
