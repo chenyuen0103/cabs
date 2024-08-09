@@ -10,7 +10,7 @@ import tensorflow as tf
 import gradient_moment as gm
 import pdb
 
-class CABSOptimizer(tf.train.GradientDescentOptimizer):
+class OurOptimizer(tf.train.GradientDescentOptimizer):
   
   """Optimizer that implements stochastic gradient desent with Coupled Adative
   Batch Size (CABS) as descibed in
@@ -46,7 +46,7 @@ class CABSOptimizer(tf.train.GradientDescentOptimizer):
         gradients. Defaults to "CABS-SGD".
     """
     
-    super(CABSOptimizer, self).__init__(learning_rate, name=name)
+    super(OurOptimizer, self).__init__(learning_rate, name=name)
     self._bs_min = bs_min
     self._bs_max = bs_max
     self._running_avg_constant = running_avg_constant
