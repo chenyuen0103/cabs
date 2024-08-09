@@ -7,6 +7,8 @@ This will download the dataset to data/cifar-10 automatically if necessary.
 
 import os
 import sys
+import csv
+import time
 sys.path.insert(0, os.path.abspath('..'))
 
 import tensorflow as tf
@@ -16,9 +18,6 @@ from cabs import CABSOptimizer
 
 #### Specify training specifics here ##########################################
 from models import cifar10_2conv_3dense as model
-import pdb
-
-
 num_steps = 8000
 learning_rate = 0.1
 initial_batch_size = 16
@@ -29,35 +28,14 @@ bs_max = 2048
 # Set up model
 tf.reset_default_graph()
 global_bs = tf.Variable(tf.constant(initial_batch_size, dtype=tf.int32))
-# images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
-# losses, variables = model.set_up_model(images, labels)
-#
-# test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
-# # Make sure to use the same variables for training and testing
-# with tf.variable_scope(tf.get_variable_scope(), reuse=True):
-#   test_losses, _ = model.set_up_model(test_images, test_labels)
-
-
-with tf.variable_scope('model', reuse=tf.AUTO_REUSE):
-  # Training model
-  images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
-  losses, variables = model.set_up_model(images, labels)
-
-  # Testing model
-  test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
-  test_losses, _ = model.set_up_model(test_images, test_labels)
-
-# Check is using the same variables
-pdb.set_trace()
-assert len(variables) == len(tf.trainable_variables())
-for v1, v2 in zip(variables, tf.trainable_variables()):
-  assert v1 == v2
-
-
+images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
+test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=128)
+losses, variables, acc = model.set_up_model(images, labels)
+_, _, test_accuracy = model.set_up_model(test_images, test_labels)
 
 # Set up CABS optimizer
 opt = CABSOptimizer(learning_rate, bs_min, bs_max)
-sgd_step, bs_new, loss = opt.minimize(losses, variables, global_bs)
+sgd_step, bs_new, loss, accuracy = opt.minimize(losses, acc, variables, global_bs)
 
 # Initialize variables and start queues
 sess = tf.Session()
@@ -65,11 +43,36 @@ coord = tf.train.Coordinator()
 sess.run(tf.global_variables_initializer())
 threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
+# Open CSV file for logging
+csv_file = open('cabs_training_log.csv', mode='w', newline='')
+csv_writer = csv.writer(csv_file)
+csv_writer.writerow(['Step', 'Loss', 'Batch Size', 'Accuracy'])
+
+start_time = time.time()
+
 # Run CABS
 for i in range(num_steps):
-  _, m_new, l = sess.run([sgd_step, bs_new, loss])
-  print(l)
-  print(m_new)
+  _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
+  print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
+
+  if i % 100 == 0:
+      # Evaluate test accuracy every 100 steps
+      test_acc = sess.run(test_accuracy)
+      print(f'Step {i}: Test Accuracy={test_acc}')
+      csv_writer.writerow([i, l, m_new, a, test_acc])
+  else:
+      csv_writer.writerow([i, l, m_new, a, None])
+
+# Compute final test accuracy
+final_test_accuracy = sess.run(test_accuracy)
+print(f'Final Test Accuracy: {final_test_accuracy}')
+# End timer
+end_time = time.time()
+total_time = end_time - start_time
+print(f'Total Training + Testing Time: {total_time} seconds')
+
+# Close CSV file
+csv_file.close()
 
 # Stop queues
 coord.request_stop()

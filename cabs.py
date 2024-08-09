@@ -53,7 +53,7 @@ class CABSOptimizer(tf.train.GradientDescentOptimizer):
     self._c = c
     self._debug = debug
   
-  def minimize(self, losses, var_list=None, global_bs=None):
+  def minimize(self, losses, acc, var_list=None, global_bs=None):
     """Add operations to minimize `loss` by updating `var_list` with SGD and
     compute the batch size for the next step according to the CABS rule.
     
@@ -121,6 +121,7 @@ class CABSOptimizer(tf.train.GradientDescentOptimizer):
         
     # Compute mean loss and feed it into a running average
     loss = tf.reduce_mean(losses)
+    accuracy = tf.reduce_mean(acc)
     update_avgs = [loss_avg.assign(mu*loss_avg + (1.0-mu)*loss)]
     
     # Compute gradients and gradient moments
@@ -158,4 +159,4 @@ class CABSOptimizer(tf.train.GradientDescentOptimizer):
     if self._debug:
       return sgd_step, bs_new, bs_new_raw, loss_avg, loss, xi_avg, xi
     else:
-      return sgd_step, bs_new, loss
+      return sgd_step, bs_new, loss, accuracy

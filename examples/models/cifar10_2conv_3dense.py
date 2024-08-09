@@ -50,4 +50,10 @@ def set_up_model(images, labels):
   
   labels = tf.cast(labels, tf.int64)
   losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=h_fc3, labels=labels)
-  return losses, [W_conv1, b_conv1, W_conv2, b_conv2, W_fc1, b_fc1, W_fc2, b_fc2, W_fc3, b_fc3]
+
+  # Calculate accuracy
+  predictions = tf.argmax(h_fc3, axis=1, output_type=tf.int64)
+  correct_predictions = tf.equal(predictions, labels)
+  accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
+
+  return losses, [W_conv1, b_conv1, W_conv2, b_conv2, W_fc1, b_fc1, W_fc2, b_fc2, W_fc3, b_fc3], accuracy
