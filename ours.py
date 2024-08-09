@@ -133,10 +133,24 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     individual_grad_norm_sum = tf.reduce_sum([tf.reduce_sum(mom) for mom in moms])
 
     grad_sum_norm = tf.reduce_sum([tf.reduce_sum(grad) for grad in grads])
-    grad_diveristy = tf.divide(individual_grad_norm_sum, grad_sum_norm)
-    print("grad_diveristy", grad_diveristy)
-    pdb.set_trace()
+    grad_diversity = tf.divide(individual_grad_norm_sum, grad_sum_norm)
+    # Start a TensorFlow session
+    with tf.Session() as sess:
+      # Initialize all variables
+      sess.run(tf.global_variables_initializer())
 
+      # Run the computations and fetch the values
+      individual_grad_norm_sum_value, grad_sum_norm_value, grad_diversity_value = sess.run(
+        [individual_grad_norm_sum, grad_sum_norm, grad_diversity]
+      )
+
+      # Print the results
+      print("individual_grad_norm_sum:", individual_grad_norm_sum_value)
+      print("grad_sum_norm:", grad_sum_norm_value)
+      print("grad_diversity:", grad_diversity_value)
+
+      # Optionally, you can also set a breakpoint to inspect these values
+      pdb.set_trace()
 
     # Compute gradient variance and feed it into a running average
     grad_variances = [(m-g2) for g2, m in zip(grads_squared, moms)]
