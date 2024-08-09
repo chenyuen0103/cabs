@@ -129,8 +129,8 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     grads, moms = gm.grads_and_grad_moms(loss, input_batch_size, var_list)
     grads_squared = [tf.square(g) for g in grads]
     # Step 1: Compute the squared L2 norm of the sum of gradients
-    individual_grad_norm_sum = tf.reduce_sum(moms)
-    grad_sum_norm = tf.reduce_sum(grads_squared)
+    individual_grad_norm_sum = sum(moms)
+    grad_sum_norm = sum(grads_squared)
 
     grad_diveristy = tf.divide(individual_grad_norm_sum, grad_sum_norm)
     print("grad_diveristy", grad_diveristy)
