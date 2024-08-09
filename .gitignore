@@ -5,3 +5,5 @@ examples/data
 
 */data
 *.csv
+
+src/

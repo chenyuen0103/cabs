@@ -47,8 +47,9 @@ train_indices = indices[:train_size]
 val_indices = indices[train_size:]
 
 # Now use the indices in the inputs function
-images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=train_indices)
-val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=val_indices)
+images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
+# images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=train_indices)
+# val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=val_indices)
 
 
 
@@ -94,13 +95,13 @@ for i in range(num_steps):
     if i % 10 == 0:
         # Evaluate test accuracy every 100 steps
         # val_acc = evaluate(sess, accuracy, val_images, val_labels)
-        val_imgs, val_lbls = sess.run([val_images, val_labels])
+        # val_imgs, val_lbls = sess.run([val_images, val_labels])
         # Now use the actual data in the feed_dict
-        val_acc = sess.run(accuracy)
+        # val_acc = sess.run(accuracy)
         # test_acc = sess.run(accuracy, feed_dict={images: test_images, labels: test_labels})
         test_acc = evaluate(sess, accuracy, test_images, test_labels)
-        print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_used:<5} Train Loss = {l:<12.6f} Val Accuracy = {val_acc:<8.6f}')
-        csv_writer.writerow([i, grad_div, m_used, l,  a, val_acc, test_acc, time.time() - start_time])
+        print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_used:<5} Train Loss = {l:<12.6f} Test Accuracy = {test_acc:<8.6f}')
+        csv_writer.writerow([i, grad_div, m_used, l,  a, None, test_acc, time.time() - start_time])
     else:
         csv_writer.writerow([i, grad_div, m_used, l,  a, None, None, time.time() - start_time])
 
