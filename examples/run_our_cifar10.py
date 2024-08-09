@@ -92,7 +92,7 @@ for i in range(num_steps):
     #                               feed_dict={images: images, labels: labels})
     # print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
 
-    if i % 10 == 0:
+    if i % 100 == 0:
         # Evaluate test accuracy every 100 steps
         # val_acc = evaluate(sess, accuracy, val_images, val_labels)
         # val_imgs, val_lbls = sess.run([val_images, val_labels])
