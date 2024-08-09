@@ -133,7 +133,7 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     individual_grad_norm_sum = tf.reduce_sum([tf.reduce_sum(mom) for mom in moms])
 
     grad_sum_norm = tf.reduce_sum([tf.reduce_sum(grad) for grad in grads_squared])
-    grad_diversity = tf.divide(individual_grad_norm_sum, grad_sum_norm)
+    grad_diversity = tf.divide(individual_grad_norm_sum, grad_sum_norm) /input_batch_size
     # Start a TensorFlow session
     # Compute gradient variance and feed it into a running average
     # grad_variances = [(m-g2) for g2, m in zip(grads_squared, moms)]
@@ -144,7 +144,7 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     # moving averages are updated beforehand)
     # with tf.control_dependencies(update_avgs):
     #   bs_new_raw = c*lr*tf.divide(xi_avg, loss_avg+eps)
-    
+    #
     # Round the new batch size
     bs_new_rounded = tf.round(grad_diversity)
     bs_new = tf.clip_by_value(bs_new_rounded, bs_min, bs_max)
