@@ -32,11 +32,12 @@ images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
 
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 losses, variables, acc = model.set_up_model(images, labels)
+old_bs = initial_batch_size
 #_, _, test_accuracy = model.set_up_model(test_images, test_labels)
 
 # Set up CABS optimizer
 opt = OurOptimizer(learning_rate, bs_min, bs_max)
-sgd_step, bs_new, grad_div, loss, accuracy = opt.minimize(losses, acc, variables, global_bs)
+sgd_step, bs_new, grad_div, loss, accuracy = opt.minimize(losses, acc, variables, old_bs, global_bs)
 
 # Initialize variables and start queues
 sess = tf.Session()
