@@ -167,4 +167,4 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     if self._debug:
       return sgd_step, bs_new,  loss_avg, loss, xi_avg, xi
     else:
-      return sgd_step, bs_new, grad_diversity, loss, accuracy
+      return sgd_step, bs_new, xi_avg, loss, accuracy
