@@ -1,20 +1,3 @@
-# Copyright 2015 The TensorFlow Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-
-"""Routine for decoding the CIFAR-10 binary file format."""
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -32,19 +15,20 @@ import tensorflow as tf
 IMAGE_SIZE = 24
 
 # Global constants describing the CIFAR-10 data set.
-NUM_CLASSES = 10
+NUM_CLASSES = 100
 NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = 50000
 NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = 10000
 
-DATA_DIR = "data/cifar-10/cifar-10-batches-bin"
-DATA_URL = 'http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz'
+DATA_DIR = "data/cifar-100/cifar-100-binary"
+DATA_URL = 'http://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz'
 
 # Check if data is already there, if not download!
-dest_directory = "data/cifar-10"
+dest_directory = "data/cifar-100"
 if not os.path.exists(dest_directory):
   os.makedirs(dest_directory)
 filename = DATA_URL.split('/')[-1]
 filepath = os.path.join(dest_directory, filename)
+print("filepath:", filepath)
 if not os.path.exists(filepath):
   def _progress(count, block_size, total_size):
     sys.stdout.write('\r>> Downloading %s %.1f%%' % (filename,
@@ -57,61 +41,60 @@ if not os.path.exists(filepath):
   tarfile.open(filepath, 'r:gz').extractall(dest_directory)
 
 def read_cifar10(filename_queue):
-  """Reads and parses examples from CIFAR10 data files.
-  Recommendation: if you want N-way read parallelism, call this function
-  N times.  This will give you N independent Readers reading different
-  files & positions within those files, which will give better mixing of
-  examples.
-  Args:
+    """Reads and parses examples from CIFAR10 data files.
+    Recommendation: if you want N-way read parallelism, call this function
+    N times.  This will give you N independent Readers reading different
+    files & positions within those files, which will give better mixing of
+    examples.
+    Args:
     filename_queue: A queue of strings with the filenames to read from.
-  Returns:
+    Returns:
     An object representing a single example, with the following fields:
-      height: number of rows in the result (32)
-      width: number of columns in the result (32)
-      depth: number of color channels in the result (3)
-      key: a scalar string Tensor describing the filename & record number
+        height: number of rows in the result (32)
+        width: number of columns in the result (32)
+        depth: number of color channels in the result (3)
+        key: a scalar string Tensor describing the filename & record number
         for this example.
-      label: an int32 Tensor with the label in the range 0..9.
-      uint8image: a [height, width, depth] uint8 Tensor with the image data
-  """
+        label: an int32 Tensor with the label in the range 0..9.
+        uint8image: a [height, width, depth] uint8 Tensor with the image data
+    """
 
-  class CIFAR10Record(object):
-    pass
-  result = CIFAR10Record()
+    class CIFAR10Record(object):
+        pass
+    result = CIFAR10Record()
 
-  # Dimensions of the images in the CIFAR-10 dataset.
-  # See http://www.cs.toronto.edu/~kriz/cifar.html for a description of the
-  # input format.
-  label_bytes = 1  # 2 for CIFAR-100
-  result.height = 32
-  result.width = 32
-  result.depth = 3
-  image_bytes = result.height * result.width * result.depth
-  # Every record consists of a label followed by the image, with a
-  # fixed number of bytes for each.
-  record_bytes = label_bytes + image_bytes
+    # Dimensions of the images in the CIFAR-10 dataset.
+    # See http://www.cs.toronto.edu/~kriz/cifar.html for a description of the
+    # input format.
+    label_bytes = 2  # 2 for CIFAR-100
+    result.height = 32
+    result.width = 32
+    result.depth = 3
+    image_bytes = result.height * result.width * result.depth
+    # Every record consists of a label followed by the image, with a
+    # fixed number of bytes for each.
+    record_bytes = label_bytes + image_bytes
 
-  # Read a record, getting filenames from the filename_queue.  No
-  # header or footer in the CIFAR-10 format, so we leave header_bytes
-  # and footer_bytes at their default of 0.
-  reader = tf.FixedLengthRecordReader(record_bytes=record_bytes)
-  result.key, value = reader.read(filename_queue)
+    # Read a record, getting filenames from the filename_queue.  No
+    # header or footer in the CIFAR-10 format, so we leave header_bytes
+    # and footer_bytes at their default of 0.
+    reader = tf.FixedLengthRecordReader(record_bytes=record_bytes)
+    result.key, value = reader.read(filename_queue)
 
-  # Convert from a string to a vector of uint8 that is record_bytes long.
-  record_bytes = tf.decode_raw(value, tf.uint8)
+    # Convert from a string to a vector of uint8 that is record_bytes long.
+    record_bytes = tf.decode_raw(value, tf.uint8)
 
-  # The first bytes represent the label, which we convert from uint8->int32.
-  result.label = tf.cast(
-      tf.slice(record_bytes, [0], [label_bytes]), tf.int32)
+    # The first bytes represent the label, which we convert from uint8->int32.
+    result.label = tf.cast(tf.slice(record_bytes, [0], [1]), tf.int32)
 
-  # The remaining bytes after the label represent the image, which we reshape
-  # from [depth * height * width] to [depth, height, width].
-  depth_major = tf.reshape(tf.slice(record_bytes, [label_bytes], [image_bytes]),
-                           [result.depth, result.height, result.width])
-  # Convert from [depth, height, width] to [height, width, depth].
-  result.uint8image = tf.transpose(depth_major, [1, 2, 0])
+    # The remaining bytes after the label represent the image, which we reshape
+    # from [depth * height * width] to [depth, height, width].
+    depth_major = tf.reshape(tf.slice(record_bytes, [label_bytes], [image_bytes]),
+                            [result.depth, result.height, result.width])
+    # Convert from [depth, height, width] to [height, width, depth].
+    result.uint8image = tf.transpose(depth_major, [1, 2, 0])
 
-  return result
+    return result
 
 
 def _generate_image_and_label_batch(image, label, min_queue_examples,
@@ -219,11 +202,10 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128):
     labels: Labels. 1D tensor of [batch_size] size.
   """
   if not eval_data:
-    filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
-                 for i in xrange(1, 6)]
+    filenames = [os.path.join(data_dir, 'train.bin')]
     num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
   else:
-    filenames = [os.path.join(data_dir, 'test_batch.bin')]
+    filenames = [os.path.join(data_dir, 'test.bin')]
     num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
   for f in filenames:
     if not tf.gfile.Exists(f):
