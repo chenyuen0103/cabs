@@ -22,7 +22,7 @@ num_steps = 8000
 learning_rate = 0.1
 initial_batch_size = 16
 bs_min = 16
-bs_max = 2048
+bs_max = 16
 ###############################################################################
 
 # Set up model
