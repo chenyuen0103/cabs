@@ -69,7 +69,7 @@ test_images = test_images / 255.0
 dataset = tf.data.Dataset.from_tensor_slices((images, labels))
 
 # Shuffle the dataset
-buffer_size = len(images)
+buffer_size = 50000
 dataset = dataset.shuffle(buffer_size=buffer_size, seed=42)
 
 # Split the dataset into training and validation sets
