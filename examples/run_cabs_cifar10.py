@@ -30,8 +30,7 @@ tf.reset_default_graph()
 global_bs = tf.Variable(tf.constant(initial_batch_size, dtype=tf.int32))
 images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=128)
-losses, variables, acc = model.set_up_model(images, labels)
-_, _, test_accuracy = model.set_up_model(test_images, test_labels)
+
 
 # Set up CABS optimizer
 opt = CABSOptimizer(learning_rate, bs_min, bs_max)
