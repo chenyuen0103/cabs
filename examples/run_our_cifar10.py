@@ -58,6 +58,13 @@ buffer_size = 50000  # Size of the dataset for shuffling
 # Load CIFAR-10 dataset
 (images, labels), (test_images, test_labels) = tf.keras.datasets.cifar10.load_data()
 
+# Cast the images to float32
+images = tf.cast(images, tf.float32)
+test_images = tf.cast(test_images, tf.float32)
+
+# Normalize the pixel values to the [0, 1] range
+images = images / 255.0
+test_images = test_images / 255.0
 # Convert to tf.data.Dataset
 dataset = tf.data.Dataset.from_tensor_slices((images, labels))
 
