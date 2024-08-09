@@ -23,12 +23,33 @@ learning_rate = 0.1
 initial_batch_size = 16
 bs_min = 16
 bs_max = 2048
+validation_split = 0.2  # 20% for validation
+buffer_size = 50000  # Size of the dataset for shuffling
 ###############################################################################
 
 # Set up model
 tf.reset_default_graph()
 global_bs = tf.Variable(tf.constant(initial_batch_size, dtype=tf.int32))
-images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
+
+total_train_samples = 50000
+
+# Load and shuffle the dataset
+dataset = cifar10.inputs(eval_data=False, batch_size=global_bs)
+dataset = dataset.shuffle(buffer_size=buffer_size, seed=42)
+
+# Split the dataset
+train_size = int((1 - validation_split) * total_train_samples)
+val_size = total_train_samples - train_size
+
+train_dataset = dataset.take(train_size)
+val_dataset = dataset.skip(train_size).take(val_size)
+
+train_iterator = tf.data.make_initializable_iterator(train_dataset)
+val_iterator = tf.data.make_initializable_iterator(val_dataset)
+
+images, labels = train_iterator.get_next()
+val_images, val_labels = val_iterator.get_next()
+
 
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 losses, variables, acc = model.set_up_model(images, labels)
@@ -45,9 +66,9 @@ sess.run(tf.global_variables_initializer())
 threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 # Open CSV file for logging
-csv_file = open('cabs_training_log.csv', mode='w', newline='')
+csv_file = open('our_cifar10_training_log.csv', mode='w', newline='')
 csv_writer = csv.writer(csv_file)
-csv_writer.writerow(['Step', 'Gradieny Diversity', 'Batch Size', 'Train Loss','Train Accuracy', 'Test Accuracy'])
+csv_writer.writerow(['Step', 'Gradient Diversity', 'Batch Size', 'Train Loss','Train Accuracy', 'Val Accuracy', 'Test Accuracy', 'Time'])
 
 start_time = time.time()
 
@@ -60,17 +81,18 @@ def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
 # Run CABS
 for i in range(num_steps):
     # _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
+    m_used = m_new
     _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy])
     # print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
 
     if i % 10 == 0:
         # Evaluate test accuracy every 100 steps
+        val_acc = evaluate(sess, accuracy, val_images, val_labels)
         test_acc = evaluate(sess, accuracy, test_images, test_labels)
-        print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_new:<5} Train Loss = {l:<12.6f} Test Accuracy = {test_acc:<8.6f}')
-
-        csv_writer.writerow([i, grad_div, m_new, l,  a, test_acc])
+        print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_used:<5} Train Loss = {l:<12.6f} Val Accuracy = {val_acc:<8.6f}')
+        csv_writer.writerow([i, grad_div, m_used, l,  a, val_acc, test_acc, time.time() - start_time])
     else:
-        csv_writer.writerow([i, grad_div, m_new, l,  a, None])
+        csv_writer.writerow([i, grad_div, m_used, l,  a, None, None, time.time() - start_time])
 
 # Compute final test accuracy
 final_test_accuracy = evaluate(sess, accuracy, test_images, test_labels)
