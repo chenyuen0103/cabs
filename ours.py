@@ -133,7 +133,7 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
 
     # Step 2: Compute the sum of squared L2 norms (which is stored in moms)
     sum_individual_squared_norms = tf.add_n([tf.reduce_sum(m) for m in moms])
-    pdb.set_trace()
+
     # Step 3: Calculate the ratio
     ratio = sum_individual_squared_norms / sum_grads_squared_norm
 
@@ -149,7 +149,9 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
         g_shape_value, m_shape_value = sess.run([g_shape, m_shape])
         print(f"Gradient {i} shape: {g_shape_value}")
         print(f"Moment {i} shape: {m_shape_value}")
+        pdb.set_trace()
         assert g_shape_value == m_shape_value, f"Shape mismatch in gradient and moment for variable {i}."
+
 
     # Compute gradient variance and feed it into a running average
     grad_variances = [(m-g2) for g2, m in zip(grads_squared, moms)]
