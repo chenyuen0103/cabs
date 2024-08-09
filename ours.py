@@ -132,7 +132,7 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     # Compute the sum of all elements in each tensor within moms
     individual_grad_norm_sum = tf.reduce_sum([tf.reduce_sum(mom) for mom in moms])
 
-    grad_sum_norm = tf.reduce_sum([tf.reduce_sum(grad) for grad in grads])
+    grad_sum_norm = tf.reduce_sum([tf.reduce_sum(grad) for grad in grads_squared])
     grad_diversity = tf.divide(individual_grad_norm_sum, grad_sum_norm)
     # Start a TensorFlow session
     # Compute gradient variance and feed it into a running average
