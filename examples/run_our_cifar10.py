@@ -63,7 +63,7 @@ for i in range(num_steps):
     _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy])
     # print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
 
-    if i % 100 == 0:
+    if i % 10 == 0:
         # Evaluate test accuracy every 100 steps
         test_acc = evaluate(sess, accuracy, test_images, test_labels)
         print(f'Step {i:<4}: Grad_Div = {gd:<10.4f} Batch Size = {m_new:<5} Train Loss = {l:<12.6f} Test Accuracy = {test_acc:<8.6f}')
