@@ -86,13 +86,17 @@ m_new = initial_batch_size
 for i in range(num_steps):
     # _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
     m_used = m_new
-    _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy])
+    # _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy])
+    _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy],
+                                  feed_dict={images: images, labels: labels})
     # print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
 
     if i % 10 == 0:
         # Evaluate test accuracy every 100 steps
-        val_acc = evaluate(sess, accuracy, val_images, val_labels)
-        test_acc = evaluate(sess, accuracy, test_images, test_labels)
+        # val_acc = evaluate(sess, accuracy, val_images, val_labels)
+        val_acc = sess.run(accuracy, feed_dict={images: val_images, labels: val_labels})
+        test_acc = sess.run(accuracy, feed_dict={images: test_images, labels: test_labels})
+        # test_acc = evaluate(sess, accuracy, test_images, test_labels)
         print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_used:<5} Train Loss = {l:<12.6f} Val Accuracy = {val_acc:<8.6f}')
         csv_writer.writerow([i, grad_div, m_used, l,  a, val_acc, test_acc, time.time() - start_time])
     else:
