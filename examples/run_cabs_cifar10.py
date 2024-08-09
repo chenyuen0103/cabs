@@ -29,8 +29,10 @@ bs_max = 2048
 tf.reset_default_graph()
 global_bs = tf.Variable(tf.constant(initial_batch_size, dtype=tf.int32))
 images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
-test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=128)
 
+test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
+losses, variables, acc = model.set_up_model(images, labels)
+#_, _, test_accuracy = model.set_up_model(test_images, test_labels)
 
 # Set up CABS optimizer
 opt = CABSOptimizer(learning_rate, bs_min, bs_max)
@@ -45,25 +47,31 @@ threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 # Open CSV file for logging
 csv_file = open('cabs_training_log.csv', mode='w', newline='')
 csv_writer = csv.writer(csv_file)
-csv_writer.writerow(['Step', 'Loss', 'Batch Size', 'Accuracy'])
+csv_writer.writerow(['Step', 'Loss', 'Batch Size', 'Train Accuracy', 'Test Accuracy'])
 
 start_time = time.time()
 
+def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
+    """Evaluate the model on test data."""
+    test_imgs, test_lbls = sess.run([test_images_op, test_labels_op])
+    test_acc = sess.run(accuracy_op, feed_dict={images: test_imgs, labels: test_lbls})
+    return test_acc
+
 # Run CABS
 for i in range(num_steps):
-  _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
-  print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
+    _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
+    print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
 
-  if i % 100 == 0:
-      # Evaluate test accuracy every 100 steps
-      test_acc = sess.run(test_accuracy)
-      print(f'Step {i}: Test Accuracy={test_acc}')
-      csv_writer.writerow([i, l, m_new, a, test_acc])
-  else:
-      csv_writer.writerow([i, l, m_new, a, None])
+    if i % 100 == 0:
+        # Evaluate test accuracy every 100 steps
+        test_acc = evaluate(sess, accuracy, test_images, test_labels)
+        print(f'Step {i}: Test Accuracy={test_acc}')
+        csv_writer.writerow([i, l, m_new, a, test_acc])
+    else:
+        csv_writer.writerow([i, l, m_new, a, None])
 
 # Compute final test accuracy
-final_test_accuracy = sess.run(test_accuracy)
+final_test_accuracy = evaluate(sess, accuracy, test_images, test_labels)
 print(f'Final Test Accuracy: {final_test_accuracy}')
 # End timer
 end_time = time.time()
