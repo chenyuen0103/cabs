@@ -8,8 +8,9 @@ with Learning Rates. [url].
 
 import tensorflow as tf
 import gradient_moment as gm
+import pdb
 
-class OurOptimizer(tf.train.GradientDescentOptimizer):
+class CABSOptimizer(tf.train.GradientDescentOptimizer):
   
   """Optimizer that implements stochastic gradient desent with Coupled Adative
   Batch Size (CABS) as descibed in
@@ -45,7 +46,7 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
         gradients. Defaults to "CABS-SGD".
     """
     
-    super(OurOptimizer, self).__init__(learning_rate, name=name)
+    super(CABSOptimizer, self).__init__(learning_rate, name=name)
     self._bs_min = bs_min
     self._bs_max = bs_max
     self._running_avg_constant = running_avg_constant
@@ -125,8 +126,10 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     update_avgs = [loss_avg.assign(mu*loss_avg + (1.0-mu)*loss)]
     
     # Compute gradients and gradient moments
+    pdb.set_trace()
     grads, moms = gm.grads_and_grad_moms(loss, input_batch_size, var_list)
     grads_squared = [tf.square(g) for g in grads]
+    grad_diversity = moms.sum() / grads_squared.sum()
     
     # Compute gradient variance and feed it into a running average
     grad_variances = [(m-g2) for g2, m in zip(grads_squared, moms)]
