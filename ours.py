@@ -128,7 +128,6 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     # Compute gradients and gradient moments
     grads, moms = gm.grads_and_grad_moms(loss, input_batch_size, var_list)
     grads_squared = [tf.square(g) for g in grads]
-    grad_diversity = moms.sum() / grads_squared.sum()
     # Step 1: Compute the squared L2 norm of the sum of gradients
     sum_grads_squared_norm = tf.add_n([tf.reduce_sum(tf.square(g)) for g in grads])
 
@@ -136,7 +135,7 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     sum_individual_squared_norms = tf.add_n([tf.reduce_sum(m) for m in moms])
     pdb.set_trace()
     # Step 3: Calculate the ratio
-    ratio = sum_grads_squared_norm / sum_individual_squared_norms
+    ratio = sum_individual_squared_norms / sum_grads_squared_norm
 
     # Ensure the same number of variables in grads and moms
     assert len(grads) == len(moms), "The number of gradients and moments should be the same."
