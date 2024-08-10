@@ -49,12 +49,11 @@ train_indices = indices[:train_size]
 val_indices = indices[train_size:]
 
 
+images, labels = cifar10.inputs(eval_data=True, batch_size=global_bs, holdout_data=False)
 # Load the validation dataset
 val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, holdout_data=True)
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 
-# Load the test dataset
-images, labels = cifar10.inputs(eval_data=True, batch_size=10000)
 
 # Set up the model for training data
 losses, variables, acc = model.set_up_model(images, labels)
