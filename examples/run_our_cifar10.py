@@ -146,9 +146,9 @@ for i in range(num_steps):
         # test_acc = sess.run(accuracy, feed_dict={images: test_images, labels: test_labels})
         test_acc = evaluate(sess, accuracy, test_images, test_labels)
         print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_used:<5} Train Loss = {l:<12.6f} Test Accuracy = {test_acc:<8.6f}')
-        csv_writer.writerow([i, grad_div, m_used, l,  a, None, test_acc, time.time() - start_time])
+        csv_writer.writerow([i, gd, m_used, l,  a, None, test_acc, time.time() - start_time])
     else:
-        csv_writer.writerow([i, grad_div, m_used, l,  a, None, None, time.time() - start_time])
+        csv_writer.writerow([i, gd, m_used, l,  a, None, None, time.time() - start_time])
 
     csv_file.flush()
 
