@@ -250,21 +250,32 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
     # Subtract off the mean and divide by the variance of the pixels.
     float_image = tf.image.per_image_standardization(resized_image)
 
-    # Filter out the dataset based on indices if provided
+    # Use indices to filter the dataset if provided
     if indices is not None:
+        # Convert indices to a Tensor
+        indices = tf.convert_to_tensor(indices, dtype=tf.int32)
+
+        # Create a dataset of images and labels
         dataset = tf.data.Dataset.from_tensor_slices((float_image, read_input.label))
-        dataset = dataset.filter(lambda image, label: tf.reduce_any(tf.equal(indices, label)))
-        dataset = dataset.batch(batch_size)
-        iterator = dataset.make_one_shot_iterator()
-        images, label_batch = iterator.get_next()
+
+        # Filter the dataset using the indices
+        dataset = dataset.enumerate().filter(lambda idx, data: tf.reduce_any(tf.equal(indices, idx)))
+
+        # Drop the enumeration to get back the original dataset
+        dataset = dataset.map(lambda idx, data: data)
     else:
         # Generate a batch of images and labels by building up a queue of examples.
         min_fraction_of_examples_in_queue = 0.4
         min_queue_examples = int(num_examples_per_epoch * min_fraction_of_examples_in_queue)
 
-        images, label_batch = _generate_image_and_label_batch(float_image, read_input.label,
-                                                              min_queue_examples, batch_size,
-                                                              shuffle=False)
+        dataset = tf.data.Dataset.from_tensor_slices((float_image, read_input.label))
+
+    # Batch and shuffle the dataset
+    dataset = dataset.shuffle(buffer_size=10000).batch(batch_size)
+
+    # Create an iterator
+    iterator = dataset.make_one_shot_iterator()
+    images, label_batch = iterator.get_next()
 
     return images, tf.reshape(label_batch, [batch_size])
 
