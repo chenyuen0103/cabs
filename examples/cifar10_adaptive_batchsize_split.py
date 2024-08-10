@@ -239,10 +239,11 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, holdout_data=False):
     if not eval_data:
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
                      for i in xrange(1, 6)]
-        num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN + NUM_EXAMPLES_PER_EPOCH_FOR_VAL + NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
+        num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN + NUM_EXAMPLES_PER_EPOCH_FOR_VAL
         train_indices, holdout_indices = get_train_holdout_indices(num_examples_per_epoch)
         indices = train_indices if not holdout_data else holdout_indices
         num_examples_per_epoch = len(indices)
+        print("Using %d examples for training" % len(train_indices))
     else:
         filenames = [os.path.join(data_dir, 'test_batch.bin')]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
