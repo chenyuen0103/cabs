@@ -26,6 +26,10 @@ import tarfile
 from six.moves import xrange, urllib  # pylint: disable=redefined-builtin
 import tensorflow as tf
 import pdb
+import numpy as np
+
+# Define the proportion for the holdout set
+TRAIN_PROPORTION = 0.8
 
 # Process images of this size. Note that this differs from the original CIFAR
 # image size of 32 x 32. If one alters this number, then the entire model
@@ -211,27 +215,41 @@ def distorted_inputs(data_dir=DATA_DIR, batch_size=128):
                                          shuffle=True)
 
 
-def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
-    """Construct input for CIFAR training, validation, or evaluation using the Reader ops.
+
+def get_train_holdout_indices(num_examples, train_proportion=TRAIN_PROPORTION):
+    indices = np.arange(num_examples)
+    np.random.shuffle(indices)
+    split_point = int(num_examples * train_proportion)
+    train_indices = indices[:split_point]
+    holdout_indices = indices[split_point:]
+    return train_indices, holdout_indices
+
+
+def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, holdout_data=False):
+    """Construct input for CIFAR evaluation using the Reader ops.
     Args:
-        eval_data: bool, indicating if one should use the train/val or test data set.
-        data_dir: Path to the CIFAR-10 data directory.
-        batch_size: Number of images per batch.
-        indices: Optional list of indices to use for custom dataset splitting.
+    eval_data: bool, indicating if one should use the train or eval data set.
+    holdout_data: bool, indicating if one should use the holdout set.
+    data_dir: Path to the CIFAR-10 data directory.
+    batch_size: Number of images per batch.
     Returns:
-        images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
-        labels: Labels. 1D tensor of [batch_size] size.
+    images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
+    labels: Labels. 1D tensor of [batch_size] size.
     """
-    if not eval_data:  # Training or validation
+    if not eval_data:
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
-                     for i in range(1, 6)]
-        num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN if indices is None else NUM_EXAMPLES_PER_EPOCH_FOR_VAL
-    else:  # Test
+                     for i in xrange(1, 6)]
+        num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN + NUM_EXAMPLES_PER_EPOCH_FOR_VAL
+        train_indices, holdout_indices = get_train_holdout_indices(num_examples_per_epoch)
+        indices = train_indices if not holdout_data else holdout_indices
+        num_examples_per_epoch = len(indices)
+    else:
         filenames = [os.path.join(data_dir, 'test_batch.bin')]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
 
-    # Adjust the batch size based on available samples
-    adjusted_batch_size = min(batch_size, num_examples_per_epoch)
+    for f in filenames:
+        if not tf.gfile.Exists(f):
+            raise ValueError('Failed to find file: ' + f)
 
     # Create a queue that produces the filenames to read.
     filename_queue = tf.train.string_input_producer(filenames)
@@ -244,21 +262,16 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
     width = IMAGE_SIZE
 
     # Image processing for evaluation.
-    resized_image = tf.image.resize_image_with_crop_or_pad(reshaped_image, width, height)
+    # Crop the central [height, width] of the image.
+    resized_image = tf.image.resize_image_with_crop_or_pad(reshaped_image,
+                                                           width, height)
+
+    # Subtract off the mean and divide by the variance of the pixels.
     float_image = tf.image.per_image_standardization(resized_image)
 
-    if indices is not None:
-        indices = [i for i in indices if i < num_examples_per_epoch]
-        indices = tf.constant(indices, dtype=tf.int32)
-        indices_queue = tf.train.input_producer(indices, shuffle=False)
-
-        def get_image_and_label_by_index(index):
-            with tf.control_dependencies([index]):
-                image, label = tf.gather(float_image, index), tf.gather(read_input.label, index)
-            return image, label
-
-        index = indices_queue.dequeue()
-        float_image, read_input.label = get_image_and_label_by_index(index)
+    if not eval_data and indices is not None:
+        float_image = tf.gather(float_image, indices)
+        read_input.label = tf.gather(read_input.label, indices)
 
     # Ensure that the random shuffling has good mixing properties.
     min_fraction_of_examples_in_queue = 0.4
@@ -267,6 +280,6 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
 
     # Generate a batch of images and labels by building up a queue of examples.
     return _generate_image_and_label_batch(float_image, read_input.label,
-                                           min_queue_examples, adjusted_batch_size,
+                                           min_queue_examples, batch_size,
                                            shuffle=not eval_data)
 

@@ -48,25 +48,19 @@ train_size = int(0.8 * total_samples)
 train_indices = indices[:train_size]
 val_indices = indices[train_size:]
 
-assert max(train_indices) < total_samples
-assert max(val_indices) < total_samples
-# Define a function that adjusts the number of samples processed by the input pipeli
 
-
-# # Use the indices in the inputs function
-# Use the indices in the inputs function for training and validation
-val_batch_size = 100000
-images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
-# Convert to a Dataset and perform the split
-
-
-# Use the appropriate batch size for the test set
+# Load the validation dataset
+val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, holdout_data=True)
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 
+# Load the test dataset
+images, labels = cifar10.inputs(eval_data=True, batch_size=10000)
 
-# Set up the model for training
-losses, variables, acc = model.set_up_model(images, labels)
+# Set up the model for training data
+losses, variables, train_acc = model.set_up_model(images, labels)
 
+# Set up the model for validation data (optional, for tracking validation accuracy)
+val_losses, _, val_acc = model.set_up_model(val_images, val_labels)
 
 test_losses, _, test_accuracy = model.set_up_model(test_images, test_labels)
 
@@ -114,14 +108,6 @@ def evaluate(sess, accuracy_op, images_op, labels_op):
     return acc
 
 
-try:
-    # Evaluate the test set
-    final_test_accuracy = evaluate(sess, accuracy, test_images, test_labels)
-    print(f'Final Test Accuracy: {final_test_accuracy}')
-except tf.errors.OutOfRangeError:
-    pdb.set_trace()
-    print("End of dataset: Not enough samples left for the requested batch size.")
-
 
 m_new = initial_batch_size
 # Run CABS
@@ -139,7 +125,7 @@ for i in range(num_steps):
 
     if i % 100 == 0:
         # Evaluate test accuracy every 100 steps
-        # val_acc = evaluate(sess, accuracy, val_images, val_labels)
+        val_acc = evaluate(sess, accuracy, val_images, val_labels)
         # val_imgs, val_lbls = sess.run([val_images, val_labels])
         # Now use the actual data in the feed_dict
         # val_acc = sess.run(accuracy)
