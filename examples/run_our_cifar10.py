@@ -46,12 +46,14 @@ train_size = int(0.8 * total_samples)
 train_indices = indices[:train_size]
 val_indices = indices[train_size:]
 
+assert max(train_indices) < total_samples
+assert max(val_indices) < total_samples
 # Define a function that adjusts the number of samples processed by the input pipeli
 
 
 # # Use the indices in the inputs function
 images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=train_indices)
-# # images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
+# images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
 val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=val_indices)
 
 
@@ -90,13 +92,20 @@ start_time = time.time()
 #     test_acc = sess.run(accuracy_op, feed_dict={images: test_imgs, labels: test_lbls})
 #     return test_acc
 
+# Evaluate function with index checks
 def evaluate(sess, accuracy_op, images_op, labels_op):
     """Evaluate the model on validation or test data."""
     try:
         imgs, lbls = sess.run([images_op, labels_op])
+        assert len(imgs) > 0, "No images returned"
+        assert len(lbls) > 0, "No labels returned"
         acc = sess.run(accuracy_op, feed_dict={images: imgs, labels: lbls})
-    except tf.errors.OutOfRangeError:
-        acc = None  # Handle the case where the queue is out of range
+    except tf.errors.OutOfRangeError as e:
+        print("Caught OutOfRangeError during evaluation:", str(e))
+        acc = None
+    except AssertionError as ae:
+        print("Assertion Error during evaluation:", str(ae))
+        acc = None
     return acc
 
 
