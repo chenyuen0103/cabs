@@ -34,7 +34,9 @@ IMAGE_SIZE = 24
 
 # Global constants describing the CIFAR-10 data set.
 NUM_CLASSES = 10
-NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = 50000
+# NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = 50000
+NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = int(0.8*50000)
+NUM_EXAMPLES_PER_EPOCH_FOR_VAL = 50000 - NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
 NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = 10000
 
 DATA_DIR = "data/cifar-10/cifar-10-batches-bin"
@@ -223,6 +225,8 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
                  for i in xrange(1, 6)]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
+        if indices is not None:
+            num_examples_per_epoch = len(indices)
     else:
         filenames = [os.path.join(data_dir, 'test_batch.bin')]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
