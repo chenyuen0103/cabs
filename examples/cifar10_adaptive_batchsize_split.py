@@ -217,14 +217,14 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
         eval_data: bool, indicating if one should use the train or eval data set.
         data_dir: Path to the CIFAR-10 data directory.
         batch_size: Number of images per batch.
-        indices: List or array of indices to use for filtering the dataset.
+        indices: Optional list of indices to use for custom dataset splitting.
     Returns:
         images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
         labels: Labels. 1D tensor of [batch_size] size.
     """
     if not eval_data:
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
-                     for i in range(1, 6)]
+                     for i in xrange(1, 6)]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
     else:
         filenames = [os.path.join(data_dir, 'test_batch.bin')]
@@ -245,32 +245,24 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
     width = IMAGE_SIZE
 
     # Image processing for evaluation.
-    resized_image = tf.image.resize_image_with_crop_or_pad(reshaped_image, width, height)
+    # Crop the central [height, width] of the image.
+    resized_image = tf.image.resize_image_with_crop_or_pad(reshaped_image,
+                                                           width, height)
 
     # Subtract off the mean and divide by the variance of the pixels.
     float_image = tf.image.per_image_standardization(resized_image)
 
-    # Now, instead of using `from_tensor_slices`, create a proper dataset pipeline:
-    def _filter_function(index):
-        return tf.reduce_any(tf.equal(index, indices))
-
-    dataset = tf.data.Dataset.range(num_examples_per_epoch)
+    # If indices are provided, use only those indices.
     if indices is not None:
-        dataset = dataset.filter(_filter_function)
+        float_image = tf.gather(float_image, indices)
+        read_input.label = tf.gather(read_input.label, indices)
 
-    def _parse_function(index):
-        return float_image, read_input.label
+    # Ensure that the random shuffling has good mixing properties.
+    min_fraction_of_examples_in_queue = 0.4
+    min_queue_examples = int(num_examples_per_epoch *
+                             min_fraction_of_examples_in_queue)
 
-    dataset = dataset.map(_parse_function)
-
-    # Cast batch_size to int64
-    batch_size_int64 = tf.cast(batch_size, tf.int64)
-
-    # Shuffle and batch the dataset
-    dataset = dataset.shuffle(buffer_size=10000).batch(batch_size_int64)
-
-    # Create an iterator
-    iterator = dataset.make_one_shot_iterator()
-    images, label_batch = iterator.get_next()
-
-    return images, tf.reshape(label_batch, [batch_size])
+    # Generate a batch of images and labels by building up a queue of examples.
+    return _generate_image_and_label_batch(float_image, read_input.label,
+                                           min_queue_examples, batch_size,
+                                           shuffle=not eval_data)

@@ -12,7 +12,7 @@ import time
 sys.path.insert(0, os.path.abspath('..'))
 import numpy as np
 import tensorflow as tf
-import cifar10_adaptive_batchsize_split as cifar10
+import cifar10_adaptive_batchsize as cifar10
 
 from ours import OurOptimizer
 
@@ -46,9 +46,12 @@ train_size = int(0.8 * total_samples)
 train_indices = indices[:train_size]
 val_indices = indices[train_size:]
 
-# Use the indices in the inputs function
+# Define a function that adjusts the number of samples processed by the input pipeli
+
+
+# # Use the indices in the inputs function
 images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=train_indices)
-# images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
+# # images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
 val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=val_indices)
 
 
