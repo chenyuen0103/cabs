@@ -67,8 +67,8 @@ batch_size_tensor = tf.cast(global_bs, tf.int64)
 
 
 # Create iterators
-train_iterator = train_dataset.batch(batch_size_tensor ).make_one_shot_iterator()
-val_iterator = val_dataset.batch(batch_size_tensor ).make_one_shot_iterator()
+train_iterator = train_dataset.batch(batch_size_tensor ).make_initializable_iterator()
+val_iterator = val_dataset.batch(batch_size_tensor ).make_initializable_iterator()
 
 # Get the batches
 images, labels = train_iterator.get_next()
@@ -95,6 +95,12 @@ sgd_step, bs_new, grad_div, loss, accuracy = opt.minimize(losses, acc, variables
 sess = tf.Session()
 coord = tf.train.Coordinator()
 sess.run(tf.global_variables_initializer())
+
+
+# Initialize the iterators before using them
+sess.run(train_iterator.initializer)
+sess.run(val_iterator.initializer)
+
 threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 
