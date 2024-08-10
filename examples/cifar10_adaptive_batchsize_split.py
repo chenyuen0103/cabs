@@ -263,12 +263,14 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
 
     dataset = dataset.map(_parse_function)
 
+    # Cast batch_size to int64
+    batch_size_int64 = tf.cast(batch_size, tf.int64)
+
     # Shuffle and batch the dataset
-    dataset = dataset.shuffle(buffer_size=10000).batch(batch_size)
+    dataset = dataset.shuffle(buffer_size=10000).batch(batch_size_int64)
 
     # Create an iterator
     iterator = dataset.make_one_shot_iterator()
     images, label_batch = iterator.get_next()
 
     return images, tf.reshape(label_batch, [batch_size])
-
