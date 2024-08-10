@@ -18,6 +18,8 @@ from ours import OurOptimizer
 
 #### Specify training specifics here ##########################################
 from models import cifar10_2conv_3dense as model
+import pdb
+
 num_steps = 8000
 learning_rate = 0.1
 initial_batch_size = 16
@@ -56,11 +58,10 @@ assert max(val_indices) < total_samples
 images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=train_indices)
 val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=val_indices)
 
-# Adjust the batch size for the validation and test dataset
-validation_batch_size = min(10000, len(val_indices))  # Use the size of your validation set
-
-# Use the appropriate batch size for the test set
+# Calculate an appropriate batch size for validation/testing
+validation_batch_size = min(10000, len(val_indices))  # Adjust as needed
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=validation_batch_size)
+
 
 # Set up the model for training
 losses, variables, acc = model.set_up_model(images, labels)
@@ -111,6 +112,15 @@ def evaluate(sess, accuracy_op, images_op, labels_op):
         print("Assertion Error during evaluation:", str(ae))
         acc = None
     return acc
+
+
+try:
+    # Evaluate the test set
+    final_test_accuracy = evaluate(sess, accuracy, test_images, test_labels)
+    print(f'Final Test Accuracy: {final_test_accuracy}')
+except tf.errors.OutOfRangeError:
+    pdb.set_trace()
+    print("End of dataset: Not enough samples left for the requested batch size.")
 
 
 m_new = initial_batch_size
