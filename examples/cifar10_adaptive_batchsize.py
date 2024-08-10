@@ -262,6 +262,6 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
     # Generate a batch of images and labels by building up a queue of examples.
     return _generate_image_and_label_batch(float_image, read_input.label,
                                          min_queue_examples, batch_size,
-                                         shuffle=False)
+                                         shuffle=False, max_batch_size=2048)
 
 
