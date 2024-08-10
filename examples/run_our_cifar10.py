@@ -58,10 +58,14 @@ assert max(val_indices) < total_samples
 images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=train_indices)
 val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=val_indices)
 
-# Calculate an appropriate batch size for validation/testing
-validation_batch_size = min(10000, len(val_indices))  # Adjust as needed
-print(f'Validation Batch Size: {validation_batch_size}')
-test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=validation_batch_size)
+
+# Check the size of the test dataset
+test_size = 10000  # Adjust this based on the actual test dataset size
+adjusted_test_batch_size = min(10000, test_size)
+print(f'Test Batch Size: {adjusted_test_batch_size}')
+
+# Use the appropriate batch size for the test set
+test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=adjusted_test_batch_size)
 
 
 # Set up the model for training
