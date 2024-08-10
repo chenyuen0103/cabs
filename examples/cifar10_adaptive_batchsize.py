@@ -258,7 +258,7 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
     min_fraction_of_examples_in_queue = 0.8
     min_queue_examples = int(num_examples_per_epoch *
                            min_fraction_of_examples_in_queue)
-    pdb.set_trace()
+    # pdb.set_trace()
     # Generate a batch of images and labels by building up a queue of examples.
     return _generate_image_and_label_batch(float_image, read_input.label,
                                          min_queue_examples, batch_size,
