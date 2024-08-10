@@ -56,17 +56,23 @@ assert max(val_indices) < total_samples
 # # Use the indices in the inputs function
 # Use the indices in the inputs function for training and validation
 val_batch_size = 100000
-images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=train_indices)
-val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=val_batch_size, indices=val_indices)
+images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
+# Convert to a Dataset and perform the split
+dataset = tf.data.Dataset.from_tensor_slices((images, labels))
+dataset = dataset.shuffle(buffer_size=total_samples)
+train_dataset = dataset.take(train_size)
+val_dataset = dataset.skip(train_size)
 
+# Create iterators
+train_iterator = train_dataset.batch(global_bs).make_one_shot_iterator()
+val_iterator = val_dataset.batch(global_bs).make_one_shot_iterator()
 
-# Check the size of the test dataset
-test_size = 10000  # Adjust this based on the actual test dataset size
-adjusted_test_batch_size = min(10000, test_size)
-print(f'Test Batch Size: {adjusted_test_batch_size}')
+# Get the batches
+images, labels = train_iterator.get_next()
+val_images, val_labels = val_iterator.get_next()
 
 # Use the appropriate batch size for the test set
-test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=adjusted_test_batch_size)
+test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 
 
 # Set up the model for training
@@ -146,7 +152,7 @@ for i in range(num_steps):
 
     if i % 100 == 0:
         # Evaluate test accuracy every 100 steps
-        # val_acc = evaluate(sess, accuracy, val_images, val_labels)
+        val_acc = evaluate(sess, accuracy, val_images, val_labels)
         # val_imgs, val_lbls = sess.run([val_images, val_labels])
         # Now use the actual data in the feed_dict
         # val_acc = sess.run(accuracy)
