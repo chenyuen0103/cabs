@@ -53,7 +53,7 @@ val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=10000, indic
 
 
 
-test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
+test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=1000)
 losses, variables, acc = model.set_up_model(images, labels)
 # Set up model for validation
 # val_losses, _, val_acc = model.set_up_model(val_images, val_labels)
