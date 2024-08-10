@@ -84,12 +84,20 @@ csv_writer.writerow(['Step', 'Gradient Diversity', 'Batch Size', 'Train Loss','T
 
 start_time = time.time()
 
-def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
-    """Evaluate the model on test data."""
-    test_imgs, test_lbls = sess.run([test_images_op, test_labels_op])
-    test_acc = sess.run(accuracy_op, feed_dict={images: test_imgs, labels: test_lbls})
-    return test_acc
+# def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
+#     """Evaluate the model on test data."""
+#     test_imgs, test_lbls = sess.run([test_images_op, test_labels_op])
+#     test_acc = sess.run(accuracy_op, feed_dict={images: test_imgs, labels: test_lbls})
+#     return test_acc
 
+def evaluate(sess, accuracy_op, images_op, labels_op):
+    """Evaluate the model on validation or test data."""
+    try:
+        imgs, lbls = sess.run([images_op, labels_op])
+        acc = sess.run(accuracy_op, feed_dict={images: imgs, labels: lbls})
+    except tf.errors.OutOfRangeError:
+        acc = None  # Handle the case where the queue is out of range
+    return acc
 
 
 m_new = initial_batch_size
