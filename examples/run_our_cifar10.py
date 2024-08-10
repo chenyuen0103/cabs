@@ -84,28 +84,28 @@ csv_writer.writerow(['Step', 'Gradient Diversity', 'Batch Size', 'Train Loss','T
 
 start_time = time.time()
 
-# def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
-#     """Evaluate the model on test data."""
-#     test_imgs, test_lbls = sess.run([test_images_op, test_labels_op])
-#     test_acc = sess.run(accuracy_op, feed_dict={images: test_imgs, labels: test_lbls})
-#     return test_acc
+def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
+    """Evaluate the model on test data."""
+    test_imgs, test_lbls = sess.run([test_images_op, test_labels_op])
+    test_acc = sess.run(accuracy_op, feed_dict={images: test_imgs, labels: test_lbls})
+    return test_acc
 
 # Evaluate function with index checks
-def evaluate(sess, accuracy_op, images_op, labels_op):
-    """Evaluate the model on validation or test data."""
-    try:
-        imgs, lbls = sess.run([images_op, labels_op])
-        assert len(imgs) > 0, "No images returned"
-        assert len(lbls) > 0, "No labels returned"
-        acc = sess.run(accuracy_op, feed_dict={images: imgs, labels: lbls})
-    except tf.errors.OutOfRangeError as e:
-        pdb.set_trace()
-        print("Caught OutOfRangeError during evaluation:", str(e))
-        acc = None
-    except AssertionError as ae:
-        print("Assertion Error during evaluation:", str(ae))
-        acc = None
-    return acc
+# def evaluate(sess, accuracy_op, images_op, labels_op):
+#     """Evaluate the model on validation or test data."""
+#     try:
+#         imgs, lbls = sess.run([images_op, labels_op])
+#         assert len(imgs) > 0, "No images returned"
+#         assert len(lbls) > 0, "No labels returned"
+#         acc = sess.run(accuracy_op, feed_dict={images: imgs, labels: lbls})
+#     except tf.errors.OutOfRangeError as e:
+#         pdb.set_trace()
+#         print("Caught OutOfRangeError during evaluation:", str(e))
+#         acc = None
+#     except AssertionError as ae:
+#         print("Assertion Error during evaluation:", str(ae))
+#         acc = None
+#     return acc
 
 
 
