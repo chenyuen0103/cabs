@@ -58,21 +58,7 @@ assert max(val_indices) < total_samples
 val_batch_size = 100000
 images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
 # Convert to a Dataset and perform the split
-dataset = tf.data.Dataset.from_tensor_slices((images, labels))
-dataset = dataset.shuffle(buffer_size=total_samples)
-train_dataset = dataset.take(train_size)
-val_dataset = dataset.skip(train_size)
 
-batch_size_tensor = tf.cast(global_bs, tf.int64)
-
-
-# Create iterators
-train_iterator = train_dataset.batch(batch_size_tensor ).make_initializable_iterator()
-val_iterator = val_dataset.batch(batch_size_tensor ).make_initializable_iterator()
-
-# Get the batches
-images, labels = train_iterator.get_next()
-val_images, val_labels = val_iterator.get_next()
 
 # Use the appropriate batch size for the test set
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
@@ -81,8 +67,6 @@ test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 # Set up the model for training
 losses, variables, acc = model.set_up_model(images, labels)
 
-# Set up model for validation
-val_losses, _, val_acc = model.set_up_model(val_images, val_labels)
 
 test_losses, _, test_accuracy = model.set_up_model(test_images, test_labels)
 
@@ -95,10 +79,6 @@ sgd_step, bs_new, grad_div, loss, accuracy = opt.minimize(losses, acc, variables
 sess = tf.Session()
 coord = tf.train.Coordinator()
 sess.run(tf.global_variables_initializer())
-# Initialize the iterators before using them
-pdb.set_trace()
-sess.run(train_iterator.initializer)
-sess.run(val_iterator.initializer)
 threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 
@@ -159,7 +139,7 @@ for i in range(num_steps):
 
     if i % 100 == 0:
         # Evaluate test accuracy every 100 steps
-        val_acc = evaluate(sess, accuracy, val_images, val_labels)
+        # val_acc = evaluate(sess, accuracy, val_images, val_labels)
         # val_imgs, val_lbls = sess.run([val_images, val_labels])
         # Now use the actual data in the feed_dict
         # val_acc = sess.run(accuracy)
