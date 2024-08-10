@@ -79,9 +79,9 @@ test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 losses, variables, acc = model.set_up_model(images, labels)
 
 # Set up model for validation
-# val_losses, _, val_acc = model.set_up_model(val_images, val_labels)
+val_losses, _, val_acc = model.set_up_model(val_images, val_labels)
 
-#_, _, test_accuracy = model.set_up_model(test_images, test_labels)
+_, _, test_accuracy = model.set_up_model(test_images, test_labels)
 
 # Set up CABS optimizer
 opt = OurOptimizer(learning_rate, bs_min, bs_max)
