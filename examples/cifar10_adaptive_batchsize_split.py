@@ -234,6 +234,9 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
         if not tf.gfile.Exists(f):
             raise ValueError('Failed to find file: ' + f)
 
+    # Adjust the batch size based on available samples
+    adjusted_batch_size = min(batch_size, num_examples_per_epoch)
+
     # Create a queue that produces the filenames to read.
     filename_queue = tf.train.string_input_producer(filenames)
 
@@ -270,5 +273,5 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
 
     # Generate a batch of images and labels by building up a queue of examples.
     return _generate_image_and_label_batch(float_image, read_input.label,
-                                           min_queue_examples, batch_size,
+                                           min_queue_examples, adjusted_batch_size,
                                            shuffle=not eval_data)

@@ -52,15 +52,19 @@ assert max(val_indices) < total_samples
 
 
 # # Use the indices in the inputs function
+# Use the indices in the inputs function for training and validation
 images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=train_indices)
-# images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
 val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=val_indices)
 
+# Adjust the batch size for the validation and test dataset
+validation_batch_size = min(10000, len(val_indices))  # Use the size of your validation set
 
+# Use the appropriate batch size for the test set
+test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=validation_batch_size)
 
-
-test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
+# Set up the model for training
 losses, variables, acc = model.set_up_model(images, labels)
+
 # Set up model for validation
 # val_losses, _, val_acc = model.set_up_model(val_images, val_labels)
 
