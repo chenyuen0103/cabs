@@ -230,10 +230,6 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
         filenames = [os.path.join(data_dir, 'test_batch.bin')]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
 
-    for f in filenames:
-        if not tf.gfile.Exists(f):
-            raise ValueError('Failed to find file: ' + f)
-
     # Adjust the batch size based on available samples
     adjusted_batch_size = min(batch_size, num_examples_per_epoch)
 
@@ -252,13 +248,11 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
     float_image = tf.image.per_image_standardization(resized_image)
 
     if indices is not None:
-        # Create a queue with the indices
+        indices = [i for i in indices if i < num_examples_per_epoch]
         indices = tf.constant(indices, dtype=tf.int32)
         indices_queue = tf.train.input_producer(indices, shuffle=False)
 
-        # Use these indices to control the flow in the input pipeline
         def get_image_and_label_by_index(index):
-            # Implement the logic to map indices to images and labels
             with tf.control_dependencies([index]):
                 image, label = tf.gather(float_image, index), tf.gather(read_input.label, index)
             return image, label
@@ -275,3 +269,4 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
     return _generate_image_and_label_batch(float_image, read_input.label,
                                            min_queue_examples, adjusted_batch_size,
                                            shuffle=not eval_data)
+

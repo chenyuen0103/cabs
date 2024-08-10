@@ -60,6 +60,7 @@ val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, i
 
 # Calculate an appropriate batch size for validation/testing
 validation_batch_size = min(10000, len(val_indices))  # Adjust as needed
+print(f'Validation Batch Size: {validation_batch_size}')
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=validation_batch_size)
 
 
