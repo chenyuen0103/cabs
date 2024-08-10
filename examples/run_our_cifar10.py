@@ -81,7 +81,7 @@ losses, variables, acc = model.set_up_model(images, labels)
 # Set up model for validation
 val_losses, _, val_acc = model.set_up_model(val_images, val_labels)
 
-_, _, test_accuracy = model.set_up_model(test_images, test_labels)
+test_losses, _, test_accuracy = model.set_up_model(test_images, test_labels)
 
 # Set up CABS optimizer
 opt = OurOptimizer(learning_rate, bs_min, bs_max)
