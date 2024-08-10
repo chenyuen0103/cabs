@@ -52,19 +52,26 @@ val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, i
 
 
 
+
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 losses, variables, acc = model.set_up_model(images, labels)
+# Set up model for validation
+# val_losses, _, val_acc = model.set_up_model(val_images, val_labels)
+
 #_, _, test_accuracy = model.set_up_model(test_images, test_labels)
 
 # Set up CABS optimizer
 opt = OurOptimizer(learning_rate, bs_min, bs_max)
 sgd_step, bs_new, grad_div, loss, accuracy = opt.minimize(losses, acc, variables, global_bs)
 
+
 # Initialize variables and start queues
 sess = tf.Session()
 coord = tf.train.Coordinator()
 sess.run(tf.global_variables_initializer())
 threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+
+
 
 # Open CSV file for logging
 csv_file = open('our_cifar10_training_log.csv', mode='w', newline='')
