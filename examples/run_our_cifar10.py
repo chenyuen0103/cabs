@@ -106,6 +106,7 @@ def evaluate(sess, accuracy_op, images_op, labels_op):
         assert len(lbls) > 0, "No labels returned"
         acc = sess.run(accuracy_op, feed_dict={images: imgs, labels: lbls})
     except tf.errors.OutOfRangeError as e:
+        pdb.set_trace()
         print("Caught OutOfRangeError during evaluation:", str(e))
         acc = None
     except AssertionError as ae:
