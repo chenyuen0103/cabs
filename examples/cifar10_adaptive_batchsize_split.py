@@ -138,19 +138,20 @@ def _generate_image_and_label_batch(image, label, min_queue_examples,
   # Create a queue that shuffles the examples, and then
   # read 'batch_size' images + labels from the example queue.
   num_preprocess_threads = 16
+  capacity = min_queue_examples + 3 * batch_size
   if shuffle:
     images, label_batch = tf.train.shuffle_batch(
         [image, label],
         batch_size=batch_size,
         num_threads=num_preprocess_threads,
-        capacity=min_queue_examples + 2*max_batch_size,
+        capacity=capacity,
         min_after_dequeue=min_queue_examples)
   else:
     images, label_batch = tf.train.batch(
         [image, label],
         batch_size=batch_size,
         num_threads=num_preprocess_threads,
-        capacity=min_queue_examples + 2*max_batch_size)
+        capacity=capacity)
 
   # Display the training images in the visualizer.
   tf.summary.image('images', images)
