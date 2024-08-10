@@ -212,9 +212,9 @@ def distorted_inputs(data_dir=DATA_DIR, batch_size=128):
 
 
 def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
-    """Construct input for CIFAR evaluation using the Reader ops.
+    """Construct input for CIFAR training, validation, or evaluation using the Reader ops.
     Args:
-        eval_data: bool, indicating if one should use the train or eval data set.
+        eval_data: bool, indicating if one should use the train/val or test data set.
         data_dir: Path to the CIFAR-10 data directory.
         batch_size: Number of images per batch.
         indices: Optional list of indices to use for custom dataset splitting.
@@ -222,11 +222,11 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
         images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
         labels: Labels. 1D tensor of [batch_size] size.
     """
-    if not eval_data:
+    if not eval_data:  # Training or validation
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
-                     for i in xrange(1, 6)]
-        num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
-    else:
+                     for i in range(1, 6)]
+        num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN if indices is None else NUM_EXAMPLES_PER_EPOCH_FOR_VAL
+    else:  # Test
         filenames = [os.path.join(data_dir, 'test_batch.bin')]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
 
@@ -245,17 +245,23 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
     width = IMAGE_SIZE
 
     # Image processing for evaluation.
-    # Crop the central [height, width] of the image.
-    resized_image = tf.image.resize_image_with_crop_or_pad(reshaped_image,
-                                                           width, height)
-
-    # Subtract off the mean and divide by the variance of the pixels.
+    resized_image = tf.image.resize_image_with_crop_or_pad(reshaped_image, width, height)
     float_image = tf.image.per_image_standardization(resized_image)
 
-    # If indices are provided, use only those indices.
     if indices is not None:
-        float_image = tf.gather(float_image, indices)
-        read_input.label = tf.gather(read_input.label, indices)
+        # Create a queue with the indices
+        indices = tf.constant(indices, dtype=tf.int32)
+        indices_queue = tf.train.input_producer(indices, shuffle=False)
+
+        # Use these indices to control the flow in the input pipeline
+        def get_image_and_label_by_index(index):
+            # Implement the logic to map indices to images and labels
+            with tf.control_dependencies([index]):
+                image, label = tf.gather(float_image, index), tf.gather(read_input.label, index)
+            return image, label
+
+        index = indices_queue.dequeue()
+        float_image, read_input.label = get_image_and_label_by_index(index)
 
     # Ensure that the random shuffling has good mixing properties.
     min_fraction_of_examples_in_queue = 0.4
