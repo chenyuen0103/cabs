@@ -96,7 +96,7 @@ sess = tf.Session()
 coord = tf.train.Coordinator()
 sess.run(tf.global_variables_initializer())
 # Initialize the iterators before using them
-# sess.run(train_iterator.initializer)
+sess.run(train_iterator.initializer)
 # sess.run(val_iterator.initializer)
 threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
