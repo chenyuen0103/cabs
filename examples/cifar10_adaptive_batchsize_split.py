@@ -224,7 +224,7 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
     """
     if not eval_data:
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
-                     for i in xrange(1, 6)]
+                     for i in range(1, 6)]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
     else:
         filenames = [os.path.join(data_dir, 'test_batch.bin')]
@@ -250,27 +250,20 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
     # Subtract off the mean and divide by the variance of the pixels.
     float_image = tf.image.per_image_standardization(resized_image)
 
-    # Use indices to filter the dataset if provided
+    # Now, instead of using `from_tensor_slices`, create a proper dataset pipeline:
+    def _filter_function(index):
+        return tf.reduce_any(tf.equal(index, indices))
+
+    dataset = tf.data.Dataset.range(num_examples_per_epoch)
     if indices is not None:
-        # Convert indices to a Tensor
-        indices = tf.convert_to_tensor(indices, dtype=tf.int32)
+        dataset = dataset.filter(_filter_function)
 
-        # Create a dataset of images and labels
-        dataset = tf.data.Dataset.from_tensor_slices((float_image, read_input.label))
+    def _parse_function(index):
+        return float_image, read_input.label
 
-        # Filter the dataset using the indices
-        dataset = dataset.enumerate().filter(lambda idx, data: tf.reduce_any(tf.equal(indices, idx)))
+    dataset = dataset.map(_parse_function)
 
-        # Drop the enumeration to get back the original dataset
-        dataset = dataset.map(lambda idx, data: data)
-    else:
-        # Generate a batch of images and labels by building up a queue of examples.
-        min_fraction_of_examples_in_queue = 0.4
-        min_queue_examples = int(num_examples_per_epoch * min_fraction_of_examples_in_queue)
-
-        dataset = tf.data.Dataset.from_tensor_slices((float_image, read_input.label))
-
-    # Batch and shuffle the dataset
+    # Shuffle and batch the dataset
     dataset = dataset.shuffle(buffer_size=10000).batch(batch_size)
 
     # Create an iterator
