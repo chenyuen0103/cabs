@@ -63,9 +63,12 @@ dataset = dataset.shuffle(buffer_size=total_samples)
 train_dataset = dataset.take(train_size)
 val_dataset = dataset.skip(train_size)
 
+batch_size_tensor = tf.cast(global_bs, tf.int64)
+
+
 # Create iterators
-train_iterator = train_dataset.batch(global_bs).make_one_shot_iterator()
-val_iterator = val_dataset.batch(global_bs).make_one_shot_iterator()
+train_iterator = train_dataset.batch(batch_size_tensor ).make_one_shot_iterator()
+val_iterator = val_dataset.batch(batch_size_tensor ).make_one_shot_iterator()
 
 # Get the batches
 images, labels = train_iterator.get_next()
