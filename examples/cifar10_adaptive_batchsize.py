@@ -255,7 +255,7 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
         float_image = tf.gather(float_image, indices)
         read_input.label = tf.gather(read_input.label, indices)
     # Ensure that the random shuffling has good mixing properties.
-    min_fraction_of_examples_in_queue = 0.8
+    min_fraction_of_examples_in_queue = 0.4
     min_queue_examples = int(num_examples_per_epoch *
                            min_fraction_of_examples_in_queue)
     # pdb.set_trace()
