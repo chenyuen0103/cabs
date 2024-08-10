@@ -25,6 +25,7 @@ import tarfile
 
 from six.moves import xrange, urllib  # pylint: disable=redefined-builtin
 import tensorflow as tf
+import pdb
 
 # Process images of this size. Note that this differs from the original CIFAR
 # image size of 32 x 32. If one alters this number, then the entire model
@@ -209,53 +210,53 @@ def distorted_inputs(data_dir=DATA_DIR, batch_size=128):
 
 
 def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
-  """Construct input for CIFAR evaluation using the Reader ops.
-  Args:
+    """Construct input for CIFAR evaluation using the Reader ops.
+    Args:
     eval_data: bool, indicating if one should use the train or eval data set.
     data_dir: Path to the CIFAR-10 data directory.
     batch_size: Number of images per batch.
-  Returns:
+    Returns:
     images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
     labels: Labels. 1D tensor of [batch_size] size.
-  """
-  if not eval_data:
-    filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
+    """
+    if not eval_data:
+        filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
                  for i in xrange(1, 6)]
-    num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
-  else:
-    filenames = [os.path.join(data_dir, 'test_batch.bin')]
-    num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
-  for f in filenames:
-    if not tf.gfile.Exists(f):
-      raise ValueError('Failed to find file: ' + f)
+        num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
+    else:
+        filenames = [os.path.join(data_dir, 'test_batch.bin')]
+        num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
+    for f in filenames:
+        if not tf.gfile.Exists(f):
+            raise ValueError('Failed to find file: ' + f)
 
-  # Create a queue that produces the filenames to read.
-  filename_queue = tf.train.string_input_producer(filenames)
+    # Create a queue that produces the filenames to read.
+    filename_queue = tf.train.string_input_producer(filenames)
 
-  # Read examples from files in the filename queue.
-  read_input = read_cifar10(filename_queue)
-  reshaped_image = tf.cast(read_input.uint8image, tf.float32)
+    # Read examples from files in the filename queue.
+    read_input = read_cifar10(filename_queue)
+    reshaped_image = tf.cast(read_input.uint8image, tf.float32)
 
-  height = IMAGE_SIZE
-  width = IMAGE_SIZE
+    height = IMAGE_SIZE
+    width = IMAGE_SIZE
 
-  # Image processing for evaluation.
-  # Crop the central [height, width] of the image.
-  resized_image = tf.image.resize_image_with_crop_or_pad(reshaped_image,
+    # Image processing for evaluation.
+    # Crop the central [height, width] of the image.
+    resized_image = tf.image.resize_image_with_crop_or_pad(reshaped_image,
                                                          width, height)
 
-  # Subtract off the mean and divide by the variance of the pixels.
-  float_image = tf.image.per_image_standardization(resized_image)
-  if indices is not None:
-      float_image = tf.gather(float_image, indices)
-      read_input.label = tf.gather(read_input.label, indices)
-  # Ensure that the random shuffling has good mixing properties.
-  min_fraction_of_examples_in_queue = 0.4
-  min_queue_examples = int(num_examples_per_epoch *
+    # Subtract off the mean and divide by the variance of the pixels.
+    float_image = tf.image.per_image_standardization(resized_image)
+    if indices is not None:
+        float_image = tf.gather(float_image, indices)
+        read_input.label = tf.gather(read_input.label, indices)
+    # Ensure that the random shuffling has good mixing properties.
+    min_fraction_of_examples_in_queue = 0.4
+    min_queue_examples = int(num_examples_per_epoch *
                            min_fraction_of_examples_in_queue)
-
-  # Generate a batch of images and labels by building up a queue of examples.
-  return _generate_image_and_label_batch(float_image, read_input.label,
+    pdb.set_trace()
+    # Generate a batch of images and labels by building up a queue of examples.
+    return _generate_image_and_label_batch(float_image, read_input.label,
                                          min_queue_examples, batch_size,
                                          shuffle=not eval_data)
 
