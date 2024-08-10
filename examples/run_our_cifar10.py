@@ -41,15 +41,14 @@ total_samples = 50000
 indices = np.arange(total_samples)
 np.random.shuffle(indices)
 
-# Split indices into training and validation sets (e.g., 80% train, 20% validation)
+# Split indices into training and validation sets
 train_size = int(0.8 * total_samples)
 train_indices = indices[:train_size]
 val_indices = indices[train_size:]
 
-# Now use the indices in the inputs function
-images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
-# images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=train_indices)
-# val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=val_indices)
+# Use the indices in the inputs function
+images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=train_indices)
+val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, indices=val_indices)
 
 
 
@@ -87,7 +86,8 @@ m_new = initial_batch_size
 for i in range(num_steps):
     # _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
     m_used = m_new
-    _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy])
+    _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy],
+                                  feed_dict={images: train_images, labels: train_labels})
     # _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy],
     #                               feed_dict={images: images, labels: labels})
     # print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
