@@ -150,6 +150,8 @@ for i in range(num_steps):
     else:
         csv_writer.writerow([i, grad_div, m_used, l,  a, None, None, time.time() - start_time])
 
+    csv_file.flush()
+
 # Compute final test accuracy
 final_test_accuracy = evaluate(sess, accuracy, test_images, test_labels)
 print(f'Final Test Accuracy: {final_test_accuracy}')
