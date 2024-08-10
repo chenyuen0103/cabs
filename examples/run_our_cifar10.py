@@ -57,7 +57,7 @@ test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 images, labels = cifar10.inputs(eval_data=True, batch_size=10000)
 
 # Set up the model for training data
-losses, variables, train_acc = model.set_up_model(images, labels)
+losses, variables, acc = model.set_up_model(images, labels)
 
 # Set up the model for validation data (optional, for tracking validation accuracy)
 val_losses, _, val_acc = model.set_up_model(val_images, val_labels)
