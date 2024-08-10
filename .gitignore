@@ -1,5 +1,6 @@
 *.pyc
 examples/data
+examples/*.csv
 ./.idea
 */.idea/*
 
@@ -9,3 +10,8 @@ examples/data
 src/
 
 */__pycache__
+.DS_Store
+*/.DS_Store
+*/.ipynb_checkpoints
+*/.pytest_cache
+*/.coverage
