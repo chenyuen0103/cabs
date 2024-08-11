@@ -18,12 +18,15 @@ import argparse
 #### Specify training specifics here ##########################################
 from models import cifar10_2conv_3dense as model
 import pdb
+import random
+# Set seed for Python's built-in random module
+
 
 
 parser = argparse.ArgumentParser(description='CIFAR-10 CABS')
 parser.add_argument('--delta', type=float, default=1)
 parser.add_argument('--result_dir', type=str, default='./results')
-
+parser.add_argument('--manual_seed', type=int, default=0)
 args = parser.parse_args()
 
 delta = args.delta
@@ -48,15 +51,11 @@ if not os.path.exists(args.result_dir):
 # Total number of training samples
 total_samples = 50000
 
-# Generate indices and shuffle
-indices = np.arange(total_samples)
-np.random.shuffle(indices)
-
-# Split indices into training and validation sets
-train_size = int(0.8 * total_samples)
-train_indices = indices[:train_size]
-val_indices = indices[train_size:]
-
+random.seed(args.manual_seed)
+# Set seed for NumPy
+np.random.seed(args.manual_seed)
+# Set seed for TensorFlow
+tf.set_random_seed(args.manual_seed)
 
 
 images, labels, num_examples, total_examples  = cifar10.inputs(eval_data=False, batch_size=global_bs, use_holdout=False)
@@ -87,9 +86,11 @@ threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 
 # Open CSV file for logging
-csv_file = open(f'{args.result_dir}/our_cifar10_delta{delta}.csv', mode='w', newline='')
+csv_file = open(f'{args.result_dir}/our_cifar10_delta{delta}_s{args.manual_seed}.csv', mode='w', newline='')
 csv_writer = csv.writer(csv_file)
 csv_writer.writerow(['Step', 'Gradient Diversity', 'Batch Size', 'Train Loss','Train Accuracy', 'Val Accuracy', 'Test Accuracy', 'Time'])
+
+
 
 start_time = time.time()
 

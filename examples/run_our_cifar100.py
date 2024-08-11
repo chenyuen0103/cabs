@@ -23,6 +23,7 @@ import pdb
 parser = argparse.ArgumentParser(description='CIFAR-100 CABS')
 parser.add_argument('--delta', type=float, default=1)
 parser.add_argument('--result_dir', type=str, default='./results')
+parser.add_argument('--manual_seed', type=int, default=0)
 
 args = parser.parse_args()
 

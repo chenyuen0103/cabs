@@ -15,14 +15,31 @@ import tensorflow as tf
 import cifar10_adaptive_batchsize as cifar10
 
 from cabs import CABSOptimizer
-
+import argparse
 #### Specify training specifics here ##########################################
 from models import cifar10_2conv_3dense as model
+import pdb
+import random
+import numpy as np
+
+parser = argparse.ArgumentParser(description='CIFAR-10 CABS')
+parser.add_argument('--result_dir', type=str, default='./results')
+parser.add_argument('--manual_seed', type=int, default=0)
+args = parser.parse_args()
+
+
 num_steps = 8000
 learning_rate = 0.1
 initial_batch_size = 16
 bs_min = 16
 bs_max = 2048
+
+
+random.seed(args.manual_seed)
+# Set seed for NumPy
+np.random.seed(args.manual_seed)
+# Set seed for TensorFlow
+tf.set_random_seed(args.manual_seed)
 ###############################################################################
 
 # Set up model
@@ -45,7 +62,7 @@ sess.run(tf.global_variables_initializer())
 threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 # Open CSV file for logging
-csv_file = open('cabs_training_log.csv', mode='w', newline='')
+csv_file = open(f'{args.result_dir}/cabs_cifar10_s{args.manual_seed}.csv', mode='w', newline='')
 csv_writer = csv.writer(csv_file)
 csv_writer.writerow(['Step', 'Loss', 'Batch Size', 'Train Accuracy', 'Test Accuracy'])
 

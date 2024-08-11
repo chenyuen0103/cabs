@@ -6,6 +6,7 @@ import subprocess
 import time
 import multiprocessing
 from itertools import product
+import numpy as np
 
 def get_available_cpus():
     return multiprocessing.cpu_count()
@@ -51,7 +52,7 @@ def run_our():
     dataset = 'cifar10'
     available_gpus = get_available_gpus()
     num_gpus = len(available_gpus)
-    delta_gd = [1,2, 5,10]
+    delta_gd = [1]
 
 
     commands = []
@@ -126,8 +127,43 @@ def check_seed():
         if not os.path.exists(filename):
             print(f'{lr} {delta} {freq} {seed} not found')
 
+def run_our_runs(n_trials = 5):
+    result_dir = 'results'
+    dataset = 'cifar10'
+    available_cpus = get_available_cpus()
+    num_cpus = available_cpus
+    delta_gd = 1
+    seeds = np.arrange(1, n_trials + 1)
+    commands = []
+    for seed in seeds:
+        cmd = f'python run_our_{dataset}.py --delta {delta_gd} --seed {seed}'
+        commands.append(cmd)
+
+    procs_by_cpu = [None] * num_cpus
+
+    while len(commands) > 0:
+        for idx in range(num_cpus):
+            proc = procs_by_cpu[idx]
+            if (proc is None) or (proc.poll() is not None):
+                # Nothing is running on this CPU; launch a command.
+                cmd = commands.pop(0)
+                new_proc = subprocess.Popen(cmd, shell=True)
+                procs_by_cpu[idx] = new_proc
+                break
+        time.sleep(1)
+
+    # Wait for all processes to complete
+    for proc in procs_by_cpu:
+        if proc is not None:
+            proc.wait()
+
+
+
+
+
 def main():
-    run_our_cpu()
+    run_our_runs()
+    # run_our_cpu()
     # run_adabatch()
     # check_search()
     # check_seed()
