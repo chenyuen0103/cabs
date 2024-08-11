@@ -1,10 +1,45 @@
+
+import pandas as pd
+from tensorflow.python.client import device_lib
 import os
 import subprocess
 import time
+import multiprocessing
 from itertools import product
-import pandas as pd
-import tensorflow as tf
-from tensorflow.python.client import device_lib
+
+def get_available_cpus():
+    return multiprocessing.cpu_count()
+
+def run_our_cpu():
+    result_dir = 'results'
+    dataset = 'cifar10'
+    available_cpus = get_available_cpus()
+    num_cpus = available_cpus
+    delta_gd = [0.1, 1, 2, 5]
+
+    commands = []
+    for delta in product(delta_gd):
+        cmd = f'python run_our_{dataset}.py --delta {delta[0]}'
+        commands.append(cmd)
+
+    procs_by_cpu = [None] * num_cpus
+
+    while len(commands) > 0:
+        for idx in range(num_cpus):
+            proc = procs_by_cpu[idx]
+            if (proc is None) or (proc.poll() is not None):
+                # Nothing is running on this CPU; launch a command.
+                cmd = commands.pop(0)
+                new_proc = subprocess.Popen(cmd, shell=True)
+                procs_by_cpu[idx] = new_proc
+                break
+        time.sleep(1)
+
+    # Wait for all processes to complete
+    for proc in procs_by_cpu:
+        if proc is not None:
+            proc.wait()
+
 
 def get_available_gpus():
     local_device_protos = device_lib.list_local_devices()
@@ -92,7 +127,7 @@ def check_seed():
             print(f'{lr} {delta} {freq} {seed} not found')
 
 def main():
-    run_our()
+    run_our_cpu()
     # run_adabatch()
     # check_search()
     # check_seed()
