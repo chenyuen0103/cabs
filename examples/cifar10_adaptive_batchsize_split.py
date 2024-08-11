@@ -158,7 +158,7 @@ def _generate_image_and_label_batch(image, label, min_queue_examples,
   tf.summary.image('images', images)
   pdb.set_trace()
 
-  return images, tf.reshape(label_batch, [batch_size])
+  return images, tf.reshape(label_batch, [batch_size]), tf.shape(images)[0]
 
 # Possibly remove when we only use undistorted images
 def distorted_inputs(data_dir=DATA_DIR, batch_size=128):
@@ -308,6 +308,13 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
                              min_fraction_of_examples_in_queue)
 
     # Generate a batch of images and labels by building up a queue of examples.
-    return _generate_image_and_label_batch(float_image, read_input.label,
-                                           min_queue_examples, batch_size,
-                                           shuffle=False)
+    # return _generate_image_and_label_batch(float_image, read_input.label,
+    #                                        min_queue_examples, batch_size,
+    #                                        shuffle=False)
+
+    images, labels, num_examples = _generate_image_and_label_batch(
+        float_image, read_input.label,
+        min_queue_examples, batch_size,
+        shuffle=False)
+
+    return images, labels, num_examples, num_examples_per_epoch

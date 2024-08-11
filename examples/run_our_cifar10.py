@@ -50,10 +50,10 @@ val_indices = indices[train_size:]
 
 
 
-images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, use_holdout=False)
+images, labels, num_examples, total_examples  = cifar10.inputs(eval_data=False, batch_size=global_bs, use_holdout=False)
 # Load the validation dataset
-val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=10000, use_holdout=True)
-test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
+val_images, val_labels, val_num_examples, val_total_examples = cifar10.inputs(eval_data=False, batch_size=10000, use_holdout=True)
+test_images, test_labels, test_num_examples, test_total_examples = cifar10.inputs(eval_data=True, batch_size=10000)
 
 
 # Set up the model for training data
@@ -91,8 +91,9 @@ def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
     return test_acc
 
 
-queue_size_op = tf.shape(images)[0]
-pdb.set_trace()
+actual_num_examples = sess.run(num_examples)
+print(f"Number of examples in this batch: {actual_num_examples}")
+print(f"Total number of examples in the dataset: {total_examples}")
 
 m_new = initial_batch_size
 # Run CABS
