@@ -253,7 +253,6 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
 
 
     if not eval_data:
-
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
                      for i in xrange(1, 6)]
         num_files = len(filenames)
@@ -273,18 +272,7 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
             total_examples = sum([count_records(f) for f in filenames])
             print(f"Total examples for validation: {total_examples}")
             # Read and process the selected files
-            all_images = []
-            all_labels = []
-            for filename in filenames:
-                labels = read_binary_file(filename)
-                all_labels.append(labels)
-            pdb.set_trace()
 
-    elif use_holdout:
-        # Use the last 20% of training data as validation
-        filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
-                     for i in xrange(5, 6)]  # Use only the last file
-        num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_VAL
     else:
         filenames = [os.path.join(data_dir, 'test_batch.bin')]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
