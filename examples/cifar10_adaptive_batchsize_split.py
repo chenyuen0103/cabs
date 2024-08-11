@@ -249,20 +249,15 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
 
 
     if not eval_data:
-        total_examples = 0
-        for i in range(1, 6):
-            filename = os.path.join(DATA_DIR, f'data_batch_{i}.bin')
-
-
 
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
                      for i in xrange(1, 6)]
         num_files = len(filenames)
         num_train_files = int(0.8 * num_files)
+        pdb.set_trace()
         if not use_holdout:
             # Use 80% for training and 20% for validation
             filenames = filenames[:num_train_files]
-
 
             num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
 
