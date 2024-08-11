@@ -127,7 +127,12 @@ for i in range(num_steps):
     print(f"Step {i}: Queue size = {queue_size}")
     # _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
     m_used = m_new
-    _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy])
+    try:
+        _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy])
+    except tf.errors.OutOfRangeError:
+        print("End of sequence reached during training.")
+        if i == 0:
+            print("No training data available. Exiting.")
 
     # _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy],
     #                               feed_dict={images: images, labels: labels})

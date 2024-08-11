@@ -273,10 +273,10 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, holdout_data=False):
     float_image = tf.image.per_image_standardization(resized_image)
 
     if not eval_data and indices is not None:
-        # float_image = tf.gather(float_image, indices)
-        float_image = float_image[indices]
-        # read_input.label = tf.gather(read_input.label, indices)
-        read_input.label = read_input.label[indices]
+        float_image = tf.gather(float_image, indices)
+        # float_image = float_image[indices]
+        read_input.label = tf.gather(read_input.label, indices)
+        # read_input.label = read_input.label[indices]
     # Ensure that the random shuffling has good mixing properties.
     min_fraction_of_examples_in_queue = 0.4
     min_queue_examples = int(num_examples_per_epoch *
