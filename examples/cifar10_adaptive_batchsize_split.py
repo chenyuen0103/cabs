@@ -244,14 +244,17 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
     if not eval_data:
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
                      for i in xrange(1, 6)]
+        num_files = len(filenames)
+        num_train_files = int(0.8 * num_files)
         if use_holdout:
             # Use 80% for training and 20% for validation
+            filenames = filenames[num_train_files - 1:]
             num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
-            num_files = len(filenames)
-            num_train_files = int(0.8 * num_files)
-            filenames = filenames[:num_train_files]
         else:
-            num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
+            filenames = filenames[:num_train_files]
+            num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_VAL
+
+
     elif use_holdout:
         # Use the last 20% of training data as validation
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
