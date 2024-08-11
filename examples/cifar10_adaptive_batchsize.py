@@ -213,7 +213,7 @@ def distorted_inputs(data_dir=DATA_DIR, batch_size=128):
 
 
 
-def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
+def inputs(eval_data, data_dir=DATA_DIR, batch_size=128,):
     """Construct input for CIFAR evaluation using the Reader ops.
     Args:
     eval_data: bool, indicating if one should use the train or eval data set.
@@ -227,8 +227,6 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
                  for i in xrange(1, 6)]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
-        if indices is not None:
-            num_examples_per_epoch = len(indices)
     else:
         filenames = [os.path.join(data_dir, 'test_batch.bin')]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
@@ -253,9 +251,6 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, indices=None):
 
     # Subtract off the mean and divide by the variance of the pixels.
     float_image = tf.image.per_image_standardization(resized_image)
-    if indices is not None:
-        float_image = tf.gather(float_image, indices)
-        read_input.label = tf.gather(read_input.label, indices)
     # Ensure that the random shuffling has good mixing properties.
     min_fraction_of_examples_in_queue = 0.4
     min_queue_examples = int(num_examples_per_epoch *
