@@ -132,6 +132,10 @@ for i in range(num_steps):
 
     csv_file.flush()
 
+val_acc = evaluate(sess, accuracy, val_images, val_labels)
+test_acc = evaluate(sess, accuracy, test_images, test_labels)
+print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_used:<5} Train Loss = {l:<12.6f} Train Acc = {a:<12.6f}Val Accuracy = {val_acc:<8.6f}')
+csv_writer.writerow([i, gd, m_used, l,  a, val_acc, test_acc, time.time() - start_time])
 # Compute final test accuracy
 final_test_accuracy = evaluate(sess, accuracy, test_images, test_labels)
 print(f'Final Test Accuracy: {final_test_accuracy}')
