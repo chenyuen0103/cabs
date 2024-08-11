@@ -113,17 +113,13 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     input_batch_size = tf.cast(tf.gather(tf.shape(losses), 0), input_dtype)
     
     # Convert constant algo parameters to tensors
-    mu = tf.convert_to_tensor(self._running_avg_constant, dtype=input_dtype)
-    c = tf.convert_to_tensor(self._c, dtype=input_dtype)
     lr = tf.convert_to_tensor(self._learning_rate, dtype=input_dtype)
-    eps = tf.convert_to_tensor(self._eps, dtype=input_dtype)
     bs_min = tf.convert_to_tensor(self._bs_min, dtype=input_dtype)
     bs_max = tf.convert_to_tensor(self._bs_max, dtype=input_dtype)
         
     # Compute mean loss and feed it into a running average
     loss = tf.reduce_mean(losses)
     accuracy = tf.reduce_mean(acc)
-    update_avgs = [loss_avg.assign(mu*loss_avg + (1.0-mu)*loss)]
     
     # Compute gradients and gradient moments
     grads, moms = gm.grads_and_grad_moms(loss, input_batch_size, var_list)
@@ -134,6 +130,7 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
 
     grad_sum_norm = tf.reduce_sum([tf.reduce_sum(grad) for grad in grads_squared])
     grad_diversity = tf.divide(individual_grad_norm_sum, grad_sum_norm)
+    # grad_diversity = 1
     # Start a TensorFlow session
     # Compute gradient diversity and feed it into a running average
     # grad_variances = [(m-g2) for g2, m in zip(grads_squared, moms)]
@@ -146,8 +143,8 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     #   bs_new_raw = c*lr*tf.divide(xi_avg, loss_avg+eps)
     #
     # Round the new batch size
-    bs_new_rounded = tf.round(grad_diversity)
-    # bs_new_rounded = tf.round(xi_avg)
+    # bs_new_rounded = tf.round(grad_diversity)
+    bs_new_rounded = tf.round(xi_avg)
     # bs_new = tf.clip_by_value(bs_new_rounded, bs_min, bs_max)
     bs_new = tf.clip_by_value(bs_new_rounded, input_batch_size, bs_max)
     bs_new = tf.to_int32(bs_new)
