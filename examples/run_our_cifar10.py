@@ -124,10 +124,10 @@ m_new = initial_batch_size
 for i in range(num_steps):
     # _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
     m_used = m_new
-    # _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy])
+    _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy])
 
-    _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy],
-                                  feed_dict={images: images, labels: labels})
+    # _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy],
+    #                               feed_dict={images: images, labels: labels})
     # print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
 
     if i % 100 == 0:
