@@ -60,9 +60,9 @@ test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 losses, variables, acc = model.set_up_model(images, labels)
 
 # Set up the model for validation data (optional, for tracking validation accuracy)
-# val_losses, _, val_acc = model.set_up_model(val_images, val_labels)
+val_losses, _, val_acc = model.set_up_model(val_images, val_labels)
 #
-# test_losses, _, test_accuracy = model.set_up_model(test_images, test_labels)
+test_losses, _, test_accuracy = model.set_up_model(test_images, test_labels)
 
 # Set up CABS optimizer
 opt = OurOptimizer(learning_rate, bs_min, bs_max)
@@ -91,34 +91,8 @@ def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
     return test_acc
 
 
-# def evaluate(sess, accuracy_op, images_op, labels_op):
-#     """Evaluate the model on a dataset."""
-#     try:
-#         test_imgs, test_lbls = sess.run([images_op, labels_op])
-#         test_acc = sess.run(accuracy_op, feed_dict={images_op: test_imgs, labels_op: test_lbls})
-#         return test_acc
-#     except tf.errors.OutOfRangeError:
-#         print("OutOfRangeError: Dataset exhausted during evaluation.")
-#         return None
-# Evaluate function with index checks
-# def evaluate(sess, accuracy_op, images_op, labels_op):
-#     """Evaluate the model on validation or test data."""
-#     try:
-#         imgs, lbls = sess.run([images_op, labels_op])
-#         assert len(imgs) > 0, "No images returned"
-#         assert len(lbls) > 0, "No labels returned"
-#         acc = sess.run(accuracy_op, feed_dict={images: imgs, labels: lbls})
-#     except tf.errors.OutOfRangeError as e:
-#         pdb.set_trace()
-#         print("Caught OutOfRangeError during evaluation:", str(e))
-#         acc = None
-#     except AssertionError as ae:
-#         print("Assertion Error during evaluation:", str(ae))
-#         acc = None
-#     return acc
-
-
 queue_size_op = tf.shape(images)[0]
+pdb.set_trace()
 
 m_new = initial_batch_size
 # Run CABS
