@@ -20,7 +20,7 @@ from models import cifar10_2conv_3dense as model
 import pdb
 
 
-parser = argparse.ArgumentParser(description='CIFAR-10 CABS')
+parser = argparse.ArgumentParser(description='CIFAR-100 CABS')
 parser.add_argument('--delta', type=float, default=1)
 parser.add_argument('--result_dir', type=str, default='./results')
 
@@ -87,7 +87,7 @@ threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 
 # Open CSV file for logging
-csv_file = open(f'{args.result_dir}/our_cifar10_delta{delta}.csv', mode='w', newline='')
+csv_file = open(f'{args.result_dir}/our_cifar100_delta{delta}.csv', mode='w', newline='')
 csv_writer = csv.writer(csv_file)
 csv_writer.writerow(['Step', 'Gradient Diversity', 'Batch Size', 'Train Loss','Train Accuracy', 'Val Accuracy', 'Test Accuracy', 'Time'])
 
