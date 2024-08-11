@@ -143,8 +143,8 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     #   bs_new_raw = c*lr*tf.divide(xi_avg, loss_avg+eps)
     #
     # Round the new batch size
-    # bs_new_rounded = tf.round(grad_diversity)
-    bs_new_rounded = tf.round(xi_avg)
+    bs_new_rounded = tf.round(grad_diversity)
+    # bs_new_rounded = tf.round(xi_avg)
     # bs_new = tf.clip_by_value(bs_new_rounded, bs_min, bs_max)
     bs_new = tf.clip_by_value(bs_new_rounded, input_batch_size, bs_max)
     bs_new = tf.to_int32(bs_new)
