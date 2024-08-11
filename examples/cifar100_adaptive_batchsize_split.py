@@ -190,7 +190,7 @@ def distorted_inputs(data_dir=DATA_DIR, batch_size=128):
                                          shuffle=True)
 
 
-def inputs(eval_data, data_dir=DATA_DIR, batch_size=128):
+def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
   """Construct input for CIFAR evaluation using the Reader ops.
   Args:
     eval_data: bool, indicating if one should use the train or eval data set.
