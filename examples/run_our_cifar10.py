@@ -52,7 +52,7 @@ val_indices = indices[train_size:]
 
 images, labels = cifar10.inputs(eval_data=True, batch_size=global_bs, holdout_data=False)
 # Load the validation dataset
-val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=32, holdout_data=True)
+val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, holdout_data=True)
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 
 
@@ -134,7 +134,7 @@ for i in range(num_steps):
 
     if i % 100 == 0:
         # Evaluate test accuracy every 100 steps
-        val_acc = evaluate(sess, accuracy, val_images, val_labels)
+        # val_acc = evaluate(sess, accuracy, val_images, val_labels)
         # val_imgs, val_lbls = sess.run([val_images, val_labels])
         # Now use the actual data in the feed_dict
         # val_acc = sess.run(accuracy)
