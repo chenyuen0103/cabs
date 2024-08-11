@@ -83,12 +83,22 @@ csv_writer.writerow(['Step', 'Gradient Diversity', 'Batch Size', 'Train Loss','T
 
 start_time = time.time()
 
-def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
-    """Evaluate the model on test data."""
-    test_imgs, test_lbls = sess.run([test_images_op, test_labels_op])
-    test_acc = sess.run(accuracy_op, feed_dict={images: test_imgs, labels: test_lbls})
-    return test_acc
+# def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
+#     """Evaluate the model on test data."""
+#     test_imgs, test_lbls = sess.run([test_images_op, test_labels_op])
+#     test_acc = sess.run(accuracy_op, feed_dict={images: test_imgs, labels: test_lbls})
+#     return test_acc
 
+
+def evaluate(sess, accuracy_op, images_op, labels_op):
+    """Evaluate the model on a dataset."""
+    try:
+        test_imgs, test_lbls = sess.run([images_op, labels_op])
+        test_acc = sess.run(accuracy_op, feed_dict={images_op: test_imgs, labels_op: test_lbls})
+        return test_acc
+    except tf.errors.OutOfRangeError:
+        print("OutOfRangeError: Dataset exhausted during evaluation.")
+        return None
 # Evaluate function with index checks
 # def evaluate(sess, accuracy_op, images_op, labels_op):
 #     """Evaluate the model on validation or test data."""
