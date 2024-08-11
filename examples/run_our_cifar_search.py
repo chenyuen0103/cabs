@@ -16,7 +16,7 @@ def run_our():
     dataset = 'cifar10'
     available_gpus = get_available_gpus()
     num_gpus = len(available_gpus)
-    delta_gd = [0.1, 1, 5]
+    delta_gd = [0.1, 1,2, 5]
 
 
     commands = []
