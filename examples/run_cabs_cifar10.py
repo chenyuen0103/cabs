@@ -12,7 +12,7 @@ import time
 sys.path.insert(0, os.path.abspath('..'))
 
 import tensorflow as tf
-import cifar10_adaptive_batchsize as cifar10
+import cifar10_adaptive_batchsize_split as cifar10
 
 from cabs import CABSOptimizer
 
