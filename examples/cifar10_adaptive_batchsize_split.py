@@ -261,7 +261,7 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
         num_train_files = int(0.8 * num_files)
         if not use_holdout:
             # Use 80% for training and 20% for validation
-            filenames = filename[:num_train_files]
+            filenames = filenames[:num_train_files]
 
 
             num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
