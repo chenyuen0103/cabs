@@ -156,7 +156,6 @@ def _generate_image_and_label_batch(image, label, min_queue_examples,
 
   # Display the training images in the visualizer.
   tf.summary.image('images', images)
-  pdb.set_trace()
 
   return images, tf.reshape(label_batch, [batch_size]), tf.shape(images)[0]
 
