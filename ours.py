@@ -54,7 +54,7 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     self._c = c
     self._debug = debug
   
-  def minimize(self, losses, acc, var_list=None, global_bs=None):
+  def minimize(self, losses, acc, var_list=None, global_bs=None, delta = 1.0):
     """Add operations to minimize `loss` by updating `var_list` with SGD and
     compute the batch size for the next step according to the CABS rule.
     
@@ -143,7 +143,7 @@ class OurOptimizer(tf.train.GradientDescentOptimizer):
     #   bs_new_raw = c*lr*tf.divide(xi_avg, loss_avg+eps)
     #
     # Round the new batch size
-    bs_new_rounded = tf.round(grad_diversity)
+    bs_new_rounded = tf.round(grad_diversity * delta)
     # bs_new_rounded = tf.round(xi_avg)
     # bs_new = tf.clip_by_value(bs_new_rounded, bs_min, bs_max)
     bs_new = tf.clip_by_value(bs_new_rounded, input_batch_size, bs_max)

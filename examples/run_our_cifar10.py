@@ -4,7 +4,6 @@ Run CABS on a CIFAR-10 example.
 
 This will download the dataset to data/cifar-10 automatically if necessary.
 """
-
 import os
 import sys
 import csv
@@ -15,11 +14,19 @@ import tensorflow as tf
 import cifar10_adaptive_batchsize_split as cifar10
 
 from ours import OurOptimizer
-
+import argparse
 #### Specify training specifics here ##########################################
 from models import cifar10_2conv_3dense as model
 import pdb
 
+
+parser = argparse.ArgumentParser(description='CIFAR-10 CABS')
+parser.add_argument('--delta', type=float, default=1)
+parser.add_argument('--result_dir', type=str, default='results')
+
+args = parser.parse_args()
+
+delta = args.delta
 num_steps = 8000
 learning_rate = 0.1
 initial_batch_size = 16
@@ -66,7 +73,7 @@ losses, variables, acc = model.set_up_model(images, labels)
 
 # Set up CABS optimizer
 opt = OurOptimizer(learning_rate, bs_min, bs_max)
-sgd_step, bs_new, grad_div, loss, accuracy = opt.minimize(losses, acc, variables, global_bs)
+sgd_step, bs_new, grad_div, loss, accuracy = opt.minimize(losses, acc, variables, global_bs, delta=delta)
 
 
 # Initialize variables and start queues
@@ -78,7 +85,7 @@ threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 
 # Open CSV file for logging
-csv_file = open('our_cifar10_training_log.csv', mode='w', newline='')
+csv_file = open(f'{args.reuslt_dir}/our_cifar10_delta{delta}.csv', mode='w', newline='')
 csv_writer = csv.writer(csv_file)
 csv_writer.writerow(['Step', 'Gradient Diversity', 'Batch Size', 'Train Loss','Train Accuracy', 'Val Accuracy', 'Test Accuracy', 'Time'])
 
@@ -137,3 +144,5 @@ csv_file.close()
 # Stop queues
 coord.request_stop()
 coord.join(threads)
+
+
