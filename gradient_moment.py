@@ -54,6 +54,8 @@ def _check_and_sort_ops(op_list):
       valid.append(op)
     elif op.type in VALID_REGULARIZATION_TYPES:
       regularizers.append(op)
+    elif op.type == "ShapeN":
+        pass
     else:
       raise Exception("A variable in var_list is consumed by an operation of "
           "type {} for which I don't how to compute the gradient moment. "
