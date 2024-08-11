@@ -191,6 +191,13 @@ def distorted_inputs(data_dir=DATA_DIR, batch_size=128):
                                          shuffle=True)
 
 
+def parse_record(record):
+    record_vector = tf.io.decode_raw(record, tf.uint8)
+    label = tf.cast(record_vector[0], tf.int32)
+    image = tf.reshape(record_vector[1:], [32, 32, 3])
+    image = tf.cast(image, tf.float32)
+    return image, label
+
 def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
     if not eval_data:
         filename = os.path.join(data_dir, 'train.bin')
