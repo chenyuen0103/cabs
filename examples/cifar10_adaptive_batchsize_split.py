@@ -254,7 +254,7 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, holdout_data=False):
             raise ValueError('Failed to find file: ' + f)
 
     # Create a queue that produces the filenames to read.
-    filename_queue = tf.train.string_input_producer(filenames)
+    filename_queue = tf.train.string_input_producer(filenames, num_epochs=None)
 
     # Read examples from files in the filename queue.
     read_input = read_cifar10(filename_queue)
