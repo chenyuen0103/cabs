@@ -238,6 +238,7 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, holdout_data=False):
     images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
     labels: Labels. 1D tensor of [batch_size] size.
     """
+    pdb.set_trace()
     if not eval_data:
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
                      for i in xrange(1, 6)]
