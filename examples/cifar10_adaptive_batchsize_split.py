@@ -227,13 +227,16 @@ def get_train_holdout_indices(num_examples, train_proportion=TRAIN_PROPORTION):
     return train_indices, holdout_indices
 
 
-def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, holdout_data=False):
+import numpy as np
+
+
+def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, hold_out_fraction=0.2):
     """Construct input for CIFAR evaluation using the Reader ops.
     Args:
     eval_data: bool, indicating if one should use the train or eval data set.
-    holdout_data: bool, indicating if one should use the holdout set.
     data_dir: Path to the CIFAR-10 data directory.
     batch_size: Number of images per batch.
+    hold_out_fraction: Fraction of training data to hold out for validation.
     Returns:
     images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
     labels: Labels. 1D tensor of [batch_size] size.
@@ -241,21 +244,31 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, holdout_data=False):
     if not eval_data:
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
                      for i in xrange(1, 6)]
-        num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN + NUM_EXAMPLES_PER_EPOCH_FOR_VAL
-        train_indices, holdout_indices = get_train_holdout_indices(num_examples_per_epoch)
-        indices = train_indices if not holdout_data else holdout_indices
+        num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
+
+        # Calculate the number of examples for training and validation
+        total_examples = 50000  # Total number of examples in CIFAR-10 training set
+        num_val_examples = int(total_examples * hold_out_fraction)
+        num_train_examples = total_examples - num_val_examples
+
+        # Generate random indices for validation set
+        val_indices = np.random.choice(total_examples, num_val_examples, replace=False)
+        train_indices = np.setdiff1d(np.arange(total_examples), val_indices)
+
+        # Use train_indices for training and val_indices for validation
+        indices = train_indices if not eval_data else val_indices
         num_examples_per_epoch = len(indices)
-        print("Using %d examples for training" % num_examples_per_epoch)
     else:
         filenames = [os.path.join(data_dir, 'test_batch.bin')]
         num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
+        indices = None
 
     for f in filenames:
         if not tf.gfile.Exists(f):
             raise ValueError('Failed to find file: ' + f)
 
     # Create a queue that produces the filenames to read.
-    filename_queue = tf.train.string_input_producer(filenames, num_epochs=None)
+    filename_queue = tf.train.string_input_producer(filenames)
 
     # Read examples from files in the filename queue.
     read_input = read_cifar10(filename_queue)
@@ -272,11 +285,10 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, holdout_data=False):
     # Subtract off the mean and divide by the variance of the pixels.
     float_image = tf.image.per_image_standardization(resized_image)
 
-    if not eval_data and indices is not None:
+    if indices is not None:
         float_image = tf.gather(float_image, indices)
-        # float_image = float_image[indices]
         read_input.label = tf.gather(read_input.label, indices)
-        # read_input.label = read_input.label[indices]
+
     # Ensure that the random shuffling has good mixing properties.
     min_fraction_of_examples_in_queue = 0.4
     min_queue_examples = int(num_examples_per_epoch *
@@ -285,5 +297,4 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, holdout_data=False):
     # Generate a batch of images and labels by building up a queue of examples.
     return _generate_image_and_label_batch(float_image, read_input.label,
                                            min_queue_examples, batch_size,
-                                           shuffle=False)
-
+                                           shuffle=(not eval_data))

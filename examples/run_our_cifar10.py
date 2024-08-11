@@ -50,9 +50,9 @@ val_indices = indices[train_size:]
 
 
 
-images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, holdout_data=False)
+images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, hold_out_fraction=0.2)
 # Load the validation dataset
-val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, holdout_data=True)
+val_images, val_labels = cifar10.inputs(eval_data=True, batch_size=global_bs, holdout_out_fraction=0.2)
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 
 
@@ -123,28 +123,14 @@ queue_size_op = tf.shape(images)[0]
 m_new = initial_batch_size
 # Run CABS
 for i in range(num_steps):
-    _, queue_size = sess.run([sgd_step, queue_size_op])  # Get the current queue size
-    print(f"Step {i}: Queue size = {queue_size}")
+
     # _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
     m_used = m_new
-    try:
-        _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy])
-    except tf.errors.OutOfRangeError:
-        print("End of sequence reached during training.")
-        if i == 0:
-            print("No training data available. Exiting.")
-
-    # _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy],
-    #                               feed_dict={images: images, labels: labels})
-    # print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
+    _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy])
 
     if i % 100 == 0:
         # Evaluate test accuracy every 100 steps
-        # val_acc = evaluate(sess, accuracy, val_images, val_labels)
-        # val_imgs, val_lbls = sess.run([val_images, val_labels])
-        # Now use the actual data in the feed_dict
-        # val_acc = sess.run(accuracy)
-        # test_acc = sess.run(accuracy, feed_dict={images: test_images, labels: test_labels})
+        val_acc = evaluate(sess, accuracy, val_images, val_labels)
         test_acc = evaluate(sess, accuracy, test_images, test_labels)
         print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_used:<5} Train Loss = {l:<12.6f} Test Accuracy = {test_acc:<8.6f}')
         csv_writer.writerow([i, gd, m_used, l,  a, None, test_acc, time.time() - start_time])
