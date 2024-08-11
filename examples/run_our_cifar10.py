@@ -95,6 +95,15 @@ actual_num_examples = sess.run(num_examples)
 print(f"Number of examples in this batch: {actual_num_examples}")
 print(f"Total number of examples in the dataset: {total_examples}")
 
+val_num_examples = sess.run(val_num_examples)
+
+print(f"Number of examples in the validation set: {val_num_examples}"
+      f"\nTotal number of examples in the validation set: {val_total_examples}")
+
+test_num_examples = sess.run(test_num_examples)
+print(f"Number of examples in the test set: {test_num_examples}"
+      f"\nTotal number of examples in the test set: {test_total_examples}")
+
 m_new = initial_batch_size
 # Run CABS
 for i in range(num_steps):
