@@ -4,11 +4,17 @@ import time
 from itertools import product
 import pandas as pd
 import tensorflow as tf
+from tensorflow.python.client import device_lib
+
+def get_available_gpus():
+    local_device_protos = device_lib.list_local_devices()
+    gpus = [x.name for x in local_device_protos if x.device_type == 'GPU']
+    return gpus
 
 def run_our():
     result_dir = 'results'
     dataset = 'cifar10'
-    available_gpus = tf.config.list_physical_devices('GPU')
+    available_gpus = get_available_gpus()
     num_gpus = len(available_gpus)
     delta_gd = [0.1, 1, 5]
 
