@@ -11,7 +11,7 @@ import time
 sys.path.insert(0, os.path.abspath('..'))
 import numpy as np
 import tensorflow as tf
-import cifar100_adaptive_batchsize as cifar10
+import cifar100_adaptive_batchsize_split as cifar10
 
 from ours import OurOptimizer
 import argparse
