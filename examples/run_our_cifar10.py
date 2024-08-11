@@ -48,10 +48,12 @@ train_size = int(0.8 * total_samples)
 train_indices = indices[:train_size]
 val_indices = indices[train_size:]
 
+dataset_size = len(val_images)
+batch_size_value = sess.run(global_bs)
 
 images, labels = cifar10.inputs(eval_data=True, batch_size=global_bs, holdout_data=False)
 # Load the validation dataset
-val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, holdout_data=True)
+val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=batch_size_value, holdout_data=True)
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 
 
