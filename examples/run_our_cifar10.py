@@ -118,10 +118,13 @@ def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
 #     return acc
 
 
+queue_size_op = tf.shape(images)[0]
 
 m_new = initial_batch_size
 # Run CABS
 for i in range(num_steps):
+    _, queue_size = sess.run([sgd_step, queue_size_op])  # Get the current queue size
+    print(f"Step {i}: Queue size = {queue_size}")
     # _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
     m_used = m_new
     _, m_new, gd, l, a = sess.run([sgd_step, bs_new, grad_div, loss, accuracy])
