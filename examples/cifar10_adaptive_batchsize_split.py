@@ -139,7 +139,6 @@ def _generate_image_and_label_batch(image, label, min_queue_examples,
   # read 'batch_size' images + labels from the example queue.
   num_preprocess_threads = 16
   capacity = min_queue_examples + 2 * max_batch_size
-  # pdb.set_trace()
   if shuffle:
     images, label_batch = tf.train.shuffle_batch(
         [image, label],
@@ -260,7 +259,7 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
                      for i in xrange(1, 6)]
         num_files = len(filenames)
         num_train_files = int(0.8 * num_files)
-        if use_holdout:
+        if not use_holdout:
             # Use 80% for training and 20% for validation
             filenames = filenames[num_train_files - 1:]
             num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
