@@ -10,7 +10,7 @@ def run_our():
     dataset = 'cifar10'
     available_gpus = tf.config.list_physical_devices('GPU')
     num_gpus = len(available_gpus)
-    delta_gd = [0.1, 1, 2, 5, 10]
+    delta_gd = [0.1, 1, 2, 5]
 
 
     commands = []
