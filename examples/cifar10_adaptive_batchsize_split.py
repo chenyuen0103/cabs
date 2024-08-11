@@ -230,10 +230,8 @@ import numpy as np
 def read_binary_file(filename):
     with open(filename, 'rb') as f:
         everything = np.fromfile(f, dtype=np.uint8)
-        images = np.reshape(everything[1:], (-1, 3, 32, 32))
-        images = np.transpose(images, (0, 2, 3, 1))
         labels = everything[::3073]
-    return images, labels
+    return labels
 
 def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
     """Construct input for CIFAR evaluation using the Reader ops.
@@ -278,8 +276,7 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
             all_images = []
             all_labels = []
             for filename in filenames:
-                images, labels = read_binary_file(filename)
-                all_images.append(images)
+                labels = read_binary_file(filename)
                 all_labels.append(labels)
             pdb.set_trace()
 
