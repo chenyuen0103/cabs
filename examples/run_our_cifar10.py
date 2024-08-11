@@ -52,7 +52,7 @@ val_indices = indices[train_size:]
 
 images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs, use_holdout=False)
 # Load the validation dataset
-val_images, val_labels = cifar10.inputs(eval_data=True, batch_size=global_bs, use_holdout=True)
+val_images, val_labels = cifar10.inputs(eval_data=False, batch_size=global_bs, use_holdout=True)
 test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 
 
