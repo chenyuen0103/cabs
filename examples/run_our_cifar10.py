@@ -22,7 +22,7 @@ import pdb
 
 parser = argparse.ArgumentParser(description='CIFAR-10 CABS')
 parser.add_argument('--delta', type=float, default=1)
-parser.add_argument('--result_dir', type=str, default='results')
+parser.add_argument('--result_dir', type=str, default='./results')
 
 args = parser.parse_args()
 
@@ -39,6 +39,8 @@ buffer_size = 50000  # Size of the dataset for shuffling
 # # Set up model
 tf.reset_default_graph()
 global_bs = tf.Variable(tf.constant(initial_batch_size, dtype=tf.int32))
+if not os.path.exists(args.reuslt_dir):
+    os.makedirs(args.reuslt_dir)
 
 
 
