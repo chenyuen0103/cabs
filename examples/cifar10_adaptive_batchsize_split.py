@@ -227,7 +227,13 @@ def get_train_holdout_indices(num_examples, train_proportion=TRAIN_PROPORTION):
 
 
 import numpy as np
-
+def read_binary_file(filename):
+    with open(filename, 'rb') as f:
+        everything = np.fromfile(f, dtype=np.uint8)
+        images = np.reshape(everything[1:], (-1, 3, 32, 32))
+        images = np.transpose(images, (0, 2, 3, 1))
+        labels = everything[::3073]
+    return images, labels
 
 def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
     """Construct input for CIFAR evaluation using the Reader ops.
@@ -254,7 +260,7 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
                      for i in xrange(1, 6)]
         num_files = len(filenames)
         num_train_files = int(0.8 * num_files)
-        pdb.set_trace()
+
         if not use_holdout:
             # Use 80% for training and 20% for validation
             filenames = filenames[:num_train_files]
@@ -268,6 +274,14 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
             num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_VAL
             total_examples = sum([count_records(f) for f in filenames])
             print(f"Total examples for validation: {total_examples}")
+            # Read and process the selected files
+            all_images = []
+            all_labels = []
+            for filename in filenames:
+                images, labels = read_binary_file(filename)
+                all_images.append(images)
+                all_labels.append(labels)
+            pdb.set_trace()
 
     elif use_holdout:
         # Use the last 20% of training data as validation
