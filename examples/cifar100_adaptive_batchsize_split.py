@@ -8,6 +8,7 @@ import tarfile
 
 from six.moves import xrange, urllib  # pylint: disable=redefined-builtin
 import tensorflow as tf
+import pdb
 
 # Process images of this size. Note that this differs from the original CIFAR
 # image size of 32 x 32. If one alters this number, then the entire model
@@ -200,7 +201,8 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
     images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
     labels: Labels. 1D tensor of [batch_size] size.
   """
-  breakpoint()
+
+  pdb.set_trace()
   if not eval_data:
     filenames = [os.path.join(data_dir, 'train.bin')]
     num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
