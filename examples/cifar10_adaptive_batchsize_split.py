@@ -261,7 +261,7 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
         num_train_files = int(0.8 * num_files)
         if not use_holdout:
             # Use 80% for training and 20% for validation
-            filenames = filenames[num_train_files - 1:]
+            filenames = filename[:num_train_files]
 
 
             num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
@@ -269,7 +269,7 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
             total_examples = sum([count_records(f) for f in filenames])
             print(f"Total examples for training: {total_examples}")
         else:
-            filenames = filenames[:num_train_files]
+            filenames = filenames[num_train_files + 1:]
             num_examples_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_VAL
             total_examples = sum([count_records(f) for f in filenames])
             print(f"Total examples for validation: {total_examples}")
