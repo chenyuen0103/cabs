@@ -57,10 +57,12 @@ def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
     test_acc = sess.run(accuracy_op, feed_dict={images: test_imgs, labels: test_lbls})
     return test_acc
 
+
+queue_size_op = tf.shape(images)[0]
 # Run CABS
 for i in range(num_steps):
     _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
-    # print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
+    print(f'Step {i}: Queue Size={sess.run(queue_size_op)}')
 
     if i % 100 == 0:
         # Evaluate test accuracy every 100 steps
