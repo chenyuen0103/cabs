@@ -156,6 +156,7 @@ def _generate_image_and_label_batch(image, label, min_queue_examples,
 
   # Display the training images in the visualizer.
   tf.summary.image('images', images)
+  pdb.set_trace()
 
   return images, tf.reshape(label_batch, [batch_size])
 
@@ -241,7 +242,21 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
     images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
     labels: Labels. 1D tensor of [batch_size] size.
     """
+
+    def count_records(filename):
+        record_bytes = 1 + 32 * 32 * 3
+        return os.path.getsize(filename) // record_bytes
+
+
+
+
     if not eval_data:
+        total_examples = 0
+        for i in range(1, 6):
+            filename = os.path.join(DATA_DIR, f'data_batch_{i}.bin')
+            total_examples += count_records(filename)
+
+
         filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
                      for i in xrange(1, 6)]
         num_files = len(filenames)
@@ -285,6 +300,7 @@ def inputs(eval_data, data_dir=DATA_DIR, batch_size=128, use_holdout=False):
 
     # Subtract off the mean and divide by the variance of the pixels.
     float_image = tf.image.per_image_standardization(resized_image)
+
 
     # Ensure that the random shuffling has good mixing properties.
     min_fraction_of_examples_in_queue = 0.4
