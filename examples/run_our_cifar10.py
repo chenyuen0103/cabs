@@ -87,7 +87,7 @@ threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 
 # Open CSV file for logging
-csv_file = open(f'{args.reuslt_dir}/our_cifar10_delta{delta}.csv', mode='w', newline='')
+csv_file = open(f'{args.result_dir}/our_cifar10_delta{delta}.csv', mode='w', newline='')
 csv_writer = csv.writer(csv_file)
 csv_writer.writerow(['Step', 'Gradient Diversity', 'Batch Size', 'Train Loss','Train Accuracy', 'Val Accuracy', 'Test Accuracy', 'Time'])
 
