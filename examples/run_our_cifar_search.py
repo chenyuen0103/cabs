@@ -136,7 +136,7 @@ def run_our_runs(n_trials = 5):
     seeds = list(range(1, n_trials + 1))
     commands = []
     for seed in seeds:
-        cmd = f'python run_our_{dataset}.py --delta {delta_gd} --seed {seed}'
+        cmd = f'python run_our_{dataset}.py --delta {delta_gd} --manual_seed {seed}'
         commands.append(cmd)
 
     procs_by_cpu = [None] * num_cpus
