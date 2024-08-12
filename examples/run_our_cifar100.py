@@ -11,7 +11,7 @@ import time
 sys.path.insert(0, os.path.abspath('..'))
 import numpy as np
 import tensorflow as tf
-import cifar100_adaptive_batchsize as cifar10
+import cifar100_adaptive_batchsize as cifar100
 
 from ours import OurOptimizer
 import argparse
@@ -60,8 +60,8 @@ val_indices = indices[train_size:]
 
 
 
-images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
-test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
+images, labels = cifar100.inputs(eval_data=False, batch_size=global_bs)
+test_images, test_labels = cifar100.inputs(eval_data=True, batch_size=10000)
 
 
 # Set up the model for training data
