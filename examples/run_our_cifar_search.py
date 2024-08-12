@@ -127,9 +127,8 @@ def check_seed():
         if not os.path.exists(filename):
             print(f'{lr} {delta} {freq} {seed} not found')
 
-def run_runs(method = 'our', n_trials = 5):
+def run_runs(method = 'our', dataset = 'cifar10', n_trials = 5):
     result_dir = 'results'
-    dataset = 'cifar10'
     available_cpus = get_available_cpus()
     num_cpus = available_cpus
     delta_gd = 1
@@ -165,7 +164,7 @@ def run_runs(method = 'our', n_trials = 5):
 
 
 def main():
-    run_runs(method = 'cabs')
+    run_runs(method = 'cabs', dataset = 'cifar100')
     # run_our_cpu()
     # run_adabatch()
     # check_search()

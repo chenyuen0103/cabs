@@ -11,7 +11,7 @@ import time
 sys.path.insert(0, os.path.abspath('..'))
 import numpy as np
 import tensorflow as tf
-import cifar100_adaptive_batchsize_split as cifar10
+import cifar100_adaptive_batchsize as cifar10
 
 from ours import OurOptimizer
 import argparse
@@ -60,10 +60,8 @@ val_indices = indices[train_size:]
 
 
 
-images, labels, num_examples, total_examples  = cifar10.inputs(eval_data=False, batch_size=global_bs, use_holdout=False)
-# Load the validation dataset
-val_images, val_labels, val_num_examples, val_total_examples = cifar10.inputs(eval_data=False, batch_size=10000, use_holdout=True)
-test_images, test_labels, test_num_examples, test_total_examples = cifar10.inputs(eval_data=True, batch_size=10000)
+images, labels = cifar10.inputs(eval_data=False, batch_size=global_bs)
+test_images, test_labels = cifar10.inputs(eval_data=True, batch_size=10000)
 
 
 # Set up the model for training data
@@ -88,7 +86,7 @@ threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 
 # Open CSV file for logging
-csv_file = open(f'{args.result_dir}/our_cifar100_delta{delta}.csv', mode='w', newline='')
+csv_file = open(f'{args.result_dir}/our_cifar100_delta{args.delta}_s{args.manual_seed}.csv', mode='w', newline='')
 csv_writer = csv.writer(csv_file)
 csv_writer.writerow(['Step', 'Gradient Diversity', 'Batch Size', 'Train Loss','Train Accuracy', 'Val Accuracy', 'Test Accuracy', 'Time'])
 
@@ -101,19 +99,6 @@ def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
     return test_acc
 
 
-actual_num_examples = sess.run(num_examples)
-print(f"Number of examples in this batch: {actual_num_examples}")
-print(f"Total number of examples in the dataset: {total_examples}")
-
-val_num_examples = sess.run(val_num_examples)
-
-print(f"Number of examples in the validation set: {val_num_examples}"
-      f"\nTotal number of examples in the validation set: {val_total_examples}")
-
-test_num_examples = sess.run(test_num_examples)
-print(f"Number of examples in the test set: {test_num_examples}"
-      f"\nTotal number of examples in the test set: {test_total_examples}")
-
 m_new = initial_batch_size
 # Run CABS
 for i in range(num_steps):
@@ -124,19 +109,18 @@ for i in range(num_steps):
 
     if i % 100 == 0:
         # Evaluate test accuracy every 100 steps
-        val_acc = evaluate(sess, accuracy, val_images, val_labels)
         test_acc = evaluate(sess, accuracy, test_images, test_labels)
-        print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_used:<5} Train Loss = {l:<12.6f} Train Acc = {a:<12.6f}Val Accuracy = {val_acc:<8.6f}')
-        csv_writer.writerow([i, gd, m_used, l,  a, val_acc, test_acc, time.time() - start_time])
+        print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_used:<5} Train Loss = {l:<12.6f} Train Acc = {a:<12.6f} Test Accuracy = {test_acc:<8.6f}')
+        csv_writer.writerow([i, gd, m_used, l,  a, None, test_acc, time.time() - start_time])
     else:
         csv_writer.writerow([i, gd, m_used, l,  a, None, None, time.time() - start_time])
 
     csv_file.flush()
 
-val_acc = evaluate(sess, accuracy, val_images, val_labels)
+
 test_acc = evaluate(sess, accuracy, test_images, test_labels)
-print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_used:<5} Train Loss = {l:<12.6f} Train Acc = {a:<12.6f}Val Accuracy = {val_acc:<8.6f}')
-csv_writer.writerow([i, gd, m_used, l,  a, val_acc, test_acc, time.time() - start_time])
+print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_used:<5} Train Loss = {l:<12.6f} Train Acc = {a:<12.6f} Test Accuracy = {test_acc:<8.6f}')
+csv_writer.writerow([i, gd, m_used, l,  a, None, test_acc, time.time() - start_time])
 # Compute final test accuracy
 final_test_accuracy = evaluate(sess, accuracy, test_images, test_labels)
 print(f'Final Test Accuracy: {final_test_accuracy}')
