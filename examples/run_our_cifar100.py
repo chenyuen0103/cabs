@@ -53,7 +53,7 @@ threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 # Open CSV file for logging
 # Open CSV file for logging
-csv_file = open(f'{args.result_dir}/our_cifar100_delta{args.delta_gd}_s{args.manual_seed}.csv', mode='w', newline='')
+csv_file = open(f'{args.result_dir}/our_cifar100_delta{args.delta}_s{args.manual_seed}.csv', mode='w', newline='')
 csv_writer = csv.writer(csv_file)
 csv_writer.writerow(['Step', 'Loss', 'Batch Size', 'Train Accuracy', 'Train Loss', 'Test Accuracy','Time'])
 
@@ -85,7 +85,7 @@ for i in range(num_steps):
         print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_used:<5} Train Loss = {l:<12.6f} Train Acc = {a:<12.6f} Test Accuracy = {test_acc:<8.6f}')
         csv_writer.writerow([i, gd, m_used, l,  a, test_acc, time.time() - start_time])
     else:
-        csv_writer.writerow([i, l, m_new, a, None])
+        csv_writer.writerow([i, gd, m_used, l,  a, None, time.time() - start_time])
     csv_file.flush()
 
 # Compute final test accuracy
