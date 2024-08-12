@@ -133,7 +133,7 @@ def run_our_runs(n_trials = 5):
     available_cpus = get_available_cpus()
     num_cpus = available_cpus
     delta_gd = 1
-    seeds = np.arrange(1, n_trials + 1)
+    seeds = list(range(1, n_trials + 1))
     commands = []
     for seed in seeds:
         cmd = f'python run_our_{dataset}.py --delta {delta_gd} --seed {seed}'
