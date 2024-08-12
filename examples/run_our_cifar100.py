@@ -43,7 +43,7 @@ losses, variables, acc = model.set_up_model(images, labels)
 
 # Set up CABS optimizer
 opt = OurOptimizer(learning_rate, bs_min, bs_max)
-sgd_step, bs_new, grad_div, loss, accuracy = opt.minimize(losses, acc, variables, global_bs, delta=delta)
+sgd_step, bs_new, grad_div, loss, accuracy = opt.minimize(losses, acc, variables, global_bs, delta=args.delta)
 
 # Initialize variables and start queues
 sess = tf.Session()
