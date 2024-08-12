@@ -164,7 +164,7 @@ def run_runs(method = 'our', dataset = 'cifar10', n_trials = 5):
 
 
 def main():
-    run_runs(method = 'cabs', dataset = 'cifar100')
+    run_runs(method = 'our', dataset = 'cifar100')
     # run_our_cpu()
     # run_adabatch()
     # check_search()
