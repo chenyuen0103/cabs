@@ -34,9 +34,7 @@ avg_columns = col_name_map.values()
 pattern_cabs = re.compile(
     r'(?P<method>.+)_(?P<dataset>.+)_s(?P<seed>\d+)\.csv')
 pattern_ours = re.compile(
-    r'(?P<method>.+)_(?P<dataset>.+)_(?:_delta(?P<delta>[^_]+))?_s(?P<seed>\d+)\.csv'
-)
-
+    r'(?P<method>our)_(?P<dataset>cifar\d+)_delta(?P<delta>\d+\.\d+)_s(?P<seed>\d+)\.csv')
 def create_directories():
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
@@ -47,11 +45,12 @@ def parse_filename(filename):
     match_cabs = pattern_cabs.match(filename)
     match_ours = pattern_ours.match(filename)
 
-    if match_cabs:
+    if 'cabs' in filename and match_cabs:
         params = match_cabs.groupdict()
-    elif match_ours:
+    elif 'our' in filename and match_ours:
         params = match_ours.groupdict()
     else:
+        print(f"{filename} does not match any pattern.")
         return None, None
 
     method = params['method']
@@ -62,6 +61,7 @@ def parse_filename(filename):
         delta = float(delta)
 
     key = (method, dataset, delta)
+
     return key, seed
 
 def read_results():
@@ -92,15 +92,15 @@ def read_results():
 
 
 def plot_results(results, dataset = None, lr_plot = 0.1, save = False):
-    name_map = {'cabs': 'CABS', 'ours': 'DiveBatch'}
-    label_map = {'train_loss': 'Loss', 'train_accuracy': 'Accuracy', 'test_loss': 'Loss', 'test_accuracy': 'Accuracy', 'val_accuracy': 'Accuracy', 'val_loss': 'Loss','batch_size': 'Batch Size'}
+    name_map = {'cabs': 'CABS', 'our': 'DiveBatch'}
+    label_map = {'train_loss': 'Loss', 'train_acc': 'Accuracy', 'test_acc': 'Accuracy','batch_sizes': 'Batch Size'}
     CB_color_cycle = ['#377eb8', '#ff7f00', '#4daf4a',
                       '#f781bf', '#a65628', '#984ea3',
                       '#999999', '#e41a1c', '#dede00']
 
     method_colors = {
-        'CABS': CB_color_cycle[2],
-        'ours': CB_color_cycle[3]
+        'cabs': CB_color_cycle[2],
+        'our': CB_color_cycle[3]
     }
 
 
@@ -117,7 +117,7 @@ def plot_results(results, dataset = None, lr_plot = 0.1, save = False):
         data_results = {key: dfs for key, dfs in results.items() if key[1] == dataset}
 
 
-        for metric in avg_columns:
+        for metric in label_map.keys():
             if save:
                 plt.style.use(['science','ieee'])
                 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=CB_color_cycle)
@@ -130,45 +130,44 @@ def plot_results(results, dataset = None, lr_plot = 0.1, save = False):
             # plt.rcParams['axes.prop_cycle'] = plt.cycler(color=CB_color_cycle)
             handles, labels = [], []
             for key, dfs in data_results.items():
-                if key[1] == dataset and key[4] == lr_plot:  # Filter by method 'adabatch' or 'fixed' and dataset
-                    method, _, model, batch_size, lr, delta, rf = key
+                if key[1] == dataset:  # Filter by method 'adabatch' or 'fixed' and dataset
+                    method, _,delta = key
                     combined_results = pd.concat(dfs).groupby(level=0)
 
                     linestyle = ':' if (method == 'fixed') else '-'
-                    linewidth = 2 if (method == 'ours') else 1
-                    zorder = 1 if (method == 'ours') else 2
-                    color_key = f'{method}_{batch_size}' if method == 'fixed' else method
-                    color = method_colors.get(color_key, CB_color_cycle[0])
+                    linewidth = 2 if (method == 'our') else 1
+                    zorder = 1 if (method == 'our') else 2
+                    color = method_colors.get(method, CB_color_cycle[0])
                     if metric not in combined_results.first():
                         print(f"Skipping {key} due to missing {metric} column.")
                         continue
                     mean_results = combined_results[metric].mean()
-                    batch_size_avg = combined_results['batch_size'].mean()
+                    mean_results = mean_results.ffill()
+                    batch_size_avg = combined_results['batch_sizes'].mean()
+                    # Adjust x-axis for test accuracy logging interval
+                    if metric == 'test_acc':
+                        x_values = mean_results.index * 100 if metric == 'test_acc' else mean_results.index
 
                     if not save:
-                        label = f'{name_map[method]} (lr={lr}, bs={batch_size}'
+                        label = f'{name_map[method]}'
                         if delta is not None:
-                            label = label + r', $\delta$='+ f'{delta}'
+                            label = label + r'($\delta$='+ f'{delta})'
 
-                        label += ')'
                     else:
-                        if method == 'fixed':
-                            label = f'{name_map[method]} ({batch_size})'
-                        elif method in ['ours', 'cabs']:
-                            label = f'{name_map[method]})'
+                        label = f'{name_map[method]}'
                         # compute the end accuracy and standard error
                         end_accuracy = mean_results.iloc[-1]
                         std_error = combined_results[metric].sem().iloc[-1]
                         # label += f' ({end_accuracy:.2f} $\pm$ {std_error:.2f})'
                     # plt.plot(mean_results.index, mean_results, label=label, linewidth=linewidth, linestyle=linestyle, zorder=zorder)
                     if save:
-                        line, = plt.plot(mean_results.index, mean_results, label=label, linewidth=linewidth, linestyle=linestyle, zorder=zorder, color=color)
+                        line, = plt.plot(combined_results.first()['step'], mean_results, label=label, linewidth=linewidth, linestyle=linestyle, zorder=zorder, color=color)
                         # line, = plt.plot(mean_results.index, mean_results, label=label)
                         handles.append(line)
                         labels.append(label)
                     else:
-                        plt.plot(mean_results.index, mean_results, label=label, linewidth=linewidth, linestyle=linestyle, zorder=zorder)
-            plt.xlabel('Epoch')
+                        plt.plot(combined_results.first()['step'], mean_results, label=label, linewidth=linewidth, linestyle=linestyle, zorder=zorder)
+            plt.xlabel('Step')
             # plt.ylabel(metric.replace('_', ' ').title())
             plt.ylabel(label_map[metric])
             # if 'loss' in metric:
@@ -181,12 +180,13 @@ def plot_results(results, dataset = None, lr_plot = 0.1, save = False):
             # Sort legend entries to have 'Fixed' with smaller batch size first, followed by 'cabs' and then 'DiveBatch'
 
             if save:
-                fixed_handles_labels = [(h, l) for h, l in zip(handles, labels) if 'SGD' in l]
-                cabs_handles_labels = [(h, l) for h, l in zip(handles, labels) if 'CABS' in l]
+                # fixed_handles_labels = [(h, l) for h, l in zip(handles, labels) if 'SGD' in l]
+                # cabs_handles_labels = [(h, l) for h, l in zip(handles, labels) if 'CABS' in l]
                 proposed_handles_labels = [(h, l) for h, l in zip(handles, labels) if 'DiveBatch' in l]
 
-                fixed_handles_labels = sorted(fixed_handles_labels, key=lambda x: int(re.search(r'\((\d+)\)', x[1]).group(1)))
-                sorted_handles_labels = fixed_handles_labels + cabs_handles_labels + proposed_handles_labels
+                # fixed_handles_labels = sorted(fixed_handles_labels, key=lambda x: int(re.search(r'\((\d+)\)', x[1]).group(1)))
+                # sorted_handles_labels = cabs_handles_labels + proposed_handles_labels
+                sorted_handles_labels = proposed_handles_labels
                 handles, labels = zip(*sorted_handles_labels)
 
             # Sort legend entries
@@ -212,29 +212,29 @@ def plot_results(results, dataset = None, lr_plot = 0.1, save = False):
 
 
 def generate_latex_table_for_epochs(results, lr_plot):
-    name_map = {'fixed': 'SGD', 'cabs': 'CABS', 'ours': '\\ourmethod'}
+    name_map = {'fixed': 'SGD', 'cabs': 'CABS', 'our': '\\ourmethod'}
     table_content = {'cifar10': [], 'cifar100': []}
 
     for dataset in table_content.keys():
         filtered_results = {key: dfs for key, dfs in results.items() if key[1] == dataset and key[4] == lr_plot}
 
         # Filter for the top "ours" configuration
-        ours_results = {key: dfs for key, dfs in filtered_results.items() if key[0] == 'ours'}
+        ours_results = {key: dfs for key, dfs in filtered_results.items() if key[0] == 'our'}
         if ours_results:
             if dataset == 'cifar10' and lr_plot == 0.01:
-                top_ours_key, top_ours_dfs = ('ours', 'cifar10', 'resnet', 128, 0.01, 0.005, '20'), ours_results[
-                    ('ours', 'cifar10', 'resnet', 128, 0.01, 0.005, '20')]
+                top_ours_key, top_ours_dfs = ('our', 'cifar10', 'resnet', 128, 0.01, 0.005, '20'), ours_results[
+                    ('our', 'cifar10', 'resnet', 128, 0.01, 0.005, '20')]
             elif dataset == 'cifar10' and lr_plot == 0.1:
-                top_ours_key, top_ours_dfs = ('ours', 'cifar10', 'resnet', 128, 0.1, 0.005, '20'), ours_results[
-                    ('ours', 'cifar10', 'resnet', 128, 0.1, 0.005, '20')]
+                top_ours_key, top_ours_dfs = ('our', 'cifar10', 'resnet', 128, 0.1, 0.005, '20'), ours_results[
+                    ('our', 'cifar10', 'resnet', 128, 0.1, 0.005, '20')]
             elif dataset == 'cifar100' and lr_plot == 0.1:
-                top_ours_key, top_ours_dfs = ('ours', 'cifar100', 'resnet', 128, 0.1, 0.01, '20'), ours_results[
-                    ('ours', 'cifar100', 'resnet', 128, 0.1, 0.005, '20')]
+                top_ours_key, top_ours_dfs = ('our', 'cifar100', 'resnet', 128, 0.1, 0.01, '20'), ours_results[
+                    ('our', 'cifar100', 'resnet', 128, 0.1, 0.005, '20')]
             elif dataset == 'cifar100' and lr_plot == 0.01:
-                top_ours_key, top_ours_dfs = ('ours', 'cifar100', 'resnet', 128, 0.01, 0.0005, '20'), ours_results[
-                    ('ours', 'cifar100', 'resnet', 128, 0.01, 0.0005, '20')]
+                top_ours_key, top_ours_dfs = ('our', 'cifar100', 'resnet', 128, 0.01, 0.0005, '20'), ours_results[
+                    ('our', 'cifar100', 'resnet', 128, 0.01, 0.0005, '20')]
 
-            filtered_results = {key: dfs for key, dfs in filtered_results.items() if key[0] != 'ours'}
+            filtered_results = {key: dfs for key, dfs in filtered_results.items() if key[0] != 'our'}
             filtered_results[top_ours_key] = top_ours_dfs
 
         for key, dfs in filtered_results.items():
@@ -244,7 +244,7 @@ def generate_latex_table_for_epochs(results, lr_plot):
 
             for df in dfs:
                 # Calculate end accuracy for each trial
-                end_accuracy = df['test_accuracy'].iloc[-1]
+                end_accuracy = df['test_acc'].iloc[-1]
 
                 # Calculate the +- 1% range for this trial
                 accuracy_threshold_low = end_accuracy * 0.99
@@ -253,7 +253,7 @@ def generate_latex_table_for_epochs(results, lr_plot):
                 # Find the epoch where accuracy falls within +- 1% of the end accuracy
                 epoch_within_threshold = None
                 for epoch in df.index:
-                    current_accuracy = df['test_accuracy'].loc[epoch]
+                    current_accuracy = df['test_acc'].loc[epoch]
                     if accuracy_threshold_low <= current_accuracy <= accuracy_threshold_high:
                         epoch_within_threshold = epoch
                         break  # Exit the loop once the threshold is met
@@ -314,7 +314,7 @@ def generate_latex_table_for_epochs(results, lr_plot):
 
 
 def find_avg_epochs_within_threshold(results, lr_plot):
-    name_map = {'fixed': 'SGD', 'cabs': 'CABS', 'ours': '\ourmethod'}
+    name_map = {'fixed': 'SGD', 'cabs': 'CABS', 'our': '\ourmethod'}
     table_content = {'cifar10': [], 'cifar100': []}
     epoch_stats = {}
 
@@ -322,22 +322,22 @@ def find_avg_epochs_within_threshold(results, lr_plot):
         filtered_results = {key: dfs for key, dfs in results.items() if key[1] == dataset and key[4] == lr_plot}
 
         # Filter for the top "ours" configuration
-        ours_results = {key: dfs for key, dfs in filtered_results.items() if key[0] == 'ours'}
+        ours_results = {key: dfs for key, dfs in filtered_results.items() if key[0] == 'our'}
         if ours_results:
             if dataset == 'cifar10' and lr_plot == 0.01:
-                top_ours_key, top_ours_dfs = ('ours', 'cifar10', 'resnet', 128, 0.01, 0.005, '20'), ours_results[
-                    ('ours', 'cifar10', 'resnet', 128, 0.01, 0.005, '20')]
+                top_ours_key, top_ours_dfs = ('our', 'cifar10', 'resnet', 128, 0.01, 0.005, '20'), ours_results[
+                    ('our', 'cifar10', 'resnet', 128, 0.01, 0.005, '20')]
             elif dataset == 'cifar10' and lr_plot == 0.1:
-                top_ours_key, top_ours_dfs = ('ours', 'cifar10', 'resnet', 128, 0.1, 0.005, '20'), ours_results[
-                    ('ours', 'cifar10', 'resnet', 128, 0.1, 0.005, '20')]
+                top_ours_key, top_ours_dfs = ('our', 'cifar10', 'resnet', 128, 0.1, 0.005, '20'), ours_results[
+                    ('our', 'cifar10', 'resnet', 128, 0.1, 0.005, '20')]
             elif dataset == 'cifar100' and lr_plot == 0.1:
-                top_ours_key, top_ours_dfs = ('ours', 'cifar100', 'resnet', 128, 0.1, 0.01, '20'), ours_results[
-                    ('ours', 'cifar100', 'resnet', 128, 0.1, 0.005, '20')]
+                top_ours_key, top_ours_dfs = ('our', 'cifar100', 'resnet', 128, 0.1, 0.01, '20'), ours_results[
+                    ('our', 'cifar100', 'resnet', 128, 0.1, 0.005, '20')]
             elif dataset == 'cifar100' and lr_plot == 0.01:
-                top_ours_key, top_ours_dfs = ('ours', 'cifar100', 'resnet', 128, 0.01, 0.0005, '20'), ours_results[
-                    ('ours', 'cifar100', 'resnet', 128, 0.01, 0.0005, '20')]
+                top_ours_key, top_ours_dfs = ('our', 'cifar100', 'resnet', 128, 0.01, 0.0005, '20'), ours_results[
+                    ('our', 'cifar100', 'resnet', 128, 0.01, 0.0005, '20')]
 
-            filtered_results = {key: dfs for key, dfs in filtered_results.items() if key[0] != 'ours'}
+            filtered_results = {key: dfs for key, dfs in filtered_results.items() if key[0] != 'our'}
             filtered_results[top_ours_key] = top_ours_dfs
 
         for key, dfs in filtered_results.items():
@@ -346,7 +346,7 @@ def find_avg_epochs_within_threshold(results, lr_plot):
 
             for df in dfs:
                 # Calculate end accuracy for each trial
-                end_accuracy = df['test_accuracy'].iloc[-1]
+                end_accuracy = df['test_acc'].iloc[-1]
 
                 # Calculate the +- 1% range for this trial
                 accuracy_threshold_low = end_accuracy * 0.99
@@ -355,7 +355,7 @@ def find_avg_epochs_within_threshold(results, lr_plot):
                 # Find the epoch where accuracy falls within +- 1% of the end accuracy
                 epoch_within_threshold = None
                 for epoch in df.index:
-                    current_accuracy = df['test_accuracy'].loc[epoch]
+                    current_accuracy = df['test_acc'].loc[epoch]
                     if accuracy_threshold_low <= current_accuracy <= accuracy_threshold_high:
                         epoch_within_threshold = epoch
                         break  # Exit the loop once the threshold is met
@@ -384,8 +384,8 @@ def find_avg_epochs_within_threshold(results, lr_plot):
 def main():
     create_directories()
     results = read_results()
-    # plot_results(results, dataset= 'cifar100', save = True)
-    # plot_results(results, dataset= 'cifar10', save = True)
+    plot_results(results, dataset= 'cifar100', save = False)
+    plot_results(results, dataset= 'cifar10', save = False)
     # latex_table = generate_latex_table(results, 0.1)
     # threshold = find_avg_epochs_within_threshold(results, 0.1)
     # print(threshold)

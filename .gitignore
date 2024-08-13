@@ -15,3 +15,6 @@ src/
 */.ipynb_checkpoints
 */.pytest_cache
 */.coverage
+
+*.pdf
+
