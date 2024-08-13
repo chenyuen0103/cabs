@@ -1,3 +1,4 @@
+import pdb
 
 import pandas as pd
 from tensorflow.python.client import device_lib
@@ -143,7 +144,7 @@ def run_runs(method = 'our', dataset = 'cifar10', n_trials = 5):
                 cmd = f'python run_{method}_{dataset}.py --manual_seed {seed}'
             commands.append(cmd)
 
-    breakpoint()
+    pdb.set_trace()
     procs_by_cpu = [None] * num_cpus
 
     while len(commands) > 0:
