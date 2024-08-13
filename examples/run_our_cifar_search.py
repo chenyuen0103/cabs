@@ -135,8 +135,8 @@ def run_runs(method = 'our', dataset = 'cifar10', n_trials = 5):
     delta_gd = 1
     seeds = list(range(1, n_trials + 1))
     commands = []
-    # datasets = ['cifar10', 'cifar100']
-    # methods = ['our', 'cabs']
+    datasets = ['cifar10', 'cifar100']
+    # methods = ['our']
     methods = [method]
     datasets = [dataset]
     for method in methods:
@@ -172,7 +172,7 @@ def run_runs(method = 'our', dataset = 'cifar10', n_trials = 5):
 
 
 def main():
-    run_runs(method = 'cabs', dataset = 'cifar100')
+    run_runs(method = 'ours', dataset = 'cifar100')
     # run_our_cpu()
     # run_adabatch()
     # check_search()
