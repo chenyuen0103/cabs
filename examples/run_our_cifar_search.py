@@ -136,10 +136,10 @@ def run_runs(method = 'our', dataset = 'cifar10', n_trials = 5):
     delta_gd = 1
     seeds = list(range(1, n_trials + 1))
     commands = []
-    datasets = ['cifar10', 'cifar100']
+    # datasets = ['cifar10', 'cifar100']
     # methods = ['our']
     methods = [method]
-    # datasets = [dataset]
+    datasets = [dataset]
     for method in methods:
         for dataset in datasets:
             for seed in seeds:
