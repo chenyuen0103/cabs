@@ -136,13 +136,15 @@ def run_runs(method = 'our', dataset = 'cifar10', n_trials = 5):
     seeds = list(range(1, n_trials + 1))
     commands = []
     datasets = ['cifar10', 'cifar100']
-    for dataset in datasets:
-        for seed in seeds:
-            if method == 'our':
-                cmd = f'python run_{method}_{dataset}.py --delta {delta_gd} --manual_seed {seed}'
-            else:
-                cmd = f'python run_{method}_{dataset}.py --manual_seed {seed}'
-            commands.append(cmd)
+    methods = ['our', 'cabs']
+    for method in methods:
+        for dataset in datasets:
+            for seed in seeds:
+                if method == 'our':
+                    cmd = f'python run_{method}_{dataset}.py --delta {delta_gd} --manual_seed {seed}'
+                else:
+                    cmd = f'python run_{method}_{dataset}.py --manual_seed {seed}'
+                commands.append(cmd)
 
 
     procs_by_cpu = [None] * num_cpus
