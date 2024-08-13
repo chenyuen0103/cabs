@@ -17,11 +17,14 @@ avg_dir = 'averaged'
 # Columns for which we want to calculate the standard errors
 
 
-col_name_map = {'Loss': 'train_loss',
+col_name_map = {'Step': 'step',
+                'Loss': 'train_loss',
                 'Train_loss': 'train_loss',
                 'Train Accuracy':'train_acc',
                 'Test Accuracy':'test_acc',
                 'batch_size':'batch_sizes',
+                'Batch Size': 'batch_sizes',
+                'Gradient Diversity': 'grad_div',
                 'Time': 'time'
                 }
 
@@ -71,9 +74,12 @@ def read_results():
             path = os.path.join(results_dir, filename)
             try:
                 df = pd.read_csv(path)
+                # If the last step was logged twice, delete the first occurrence
 
                 # renmae columns
                 df.rename(columns=col_name_map, inplace=True)
+                if df['step'].duplicated().any():
+                    df = df[~df['step'].duplicated(keep='last')]
                 if len(df) < 100:
                     print(f"{filename} has only {len(df)} rows.")
                     continue
@@ -378,8 +384,8 @@ def find_avg_epochs_within_threshold(results, lr_plot):
 def main():
     create_directories()
     results = read_results()
-    plot_results(results, dataset= 'cifar100', save = True)
-    plot_results(results, dataset= 'cifar10', save = True)
+    # plot_results(results, dataset= 'cifar100', save = True)
+    # plot_results(results, dataset= 'cifar10', save = True)
     # latex_table = generate_latex_table(results, 0.1)
     # threshold = find_avg_epochs_within_threshold(results, 0.1)
     # print(threshold)

@@ -13,17 +13,35 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import tensorflow as tf
 import cifar100_adaptive_batchsize as cifar100
-
+import numpy as np
 from cabs import CABSOptimizer
-
+import pdb
+import argparse
+import time
+import random
 #### Specify training specifics here ##########################################
 from models import cifar100_2conv_3dense as model
+
 num_steps = 8000
 learning_rate = 0.1
 initial_batch_size = 16
 bs_min = 16
 bs_max = 2048
 ###############################################################################
+
+
+parser = argparse.ArgumentParser(description='CIFAR-10 CABS')
+parser.add_argument('--result_dir', type=str, default='./results')
+parser.add_argument('--manual_seed', type=int, default=0)
+args = parser.parse_args()
+
+
+random.seed(args.manual_seed)
+# Set seed for NumPy
+np.random.seed(args.manual_seed)
+# Set seed for TensorFlow
+tf.set_random_seed(args.manual_seed)
+
 
 # Set up model
 tf.reset_default_graph()
@@ -44,7 +62,7 @@ sess.run(tf.global_variables_initializer())
 threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 # Open CSV file for logging
-csv_file = open('cabs_training_log_cifar100.csv', mode='w', newline='')
+csv_file = open(f'{args.result_dir}/cabs_cifar100_s{args.manual_seed}.csv', mode='w', newline='')
 csv_writer = csv.writer(csv_file)
 csv_writer.writerow(['Step', 'Loss', 'Batch Size', 'Train Accuracy', 'Train Loss', 'Test Accuracy','Time'])
 
@@ -64,7 +82,8 @@ for i in range(num_steps):
     if i % 100 == 0:
         # Evaluate test accuracy every 100 steps
         test_acc = evaluate(sess, accuracy, test_images, test_labels)
-        print(f'Step {i}: Test Accuracy={test_acc}')
+        print(
+            f'Step {i:<4}: Batch Size = {m_new:<5} Train Loss = {l:<12.6f} Test Accuracy = {test_acc:<8.6f}')
         csv_writer.writerow([i, l, m_new, a, test_acc, time.time()-start_time])
     else:
         csv_writer.writerow([i, l, m_new, a, None, time.time()-start_time])
