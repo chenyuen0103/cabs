@@ -77,7 +77,7 @@ def evaluate(sess, accuracy_op, test_images_op, test_labels_op):
 # Run CABS
 for i in range(num_steps):
     _, m_new, l, a = sess.run([sgd_step, bs_new, loss, accuracy])
-    print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
+    # print(f'Step {i}: Loss={l}, Batch Size={m_new}, Accuracy={a}')
 
     if i % 100 == 0:
         # Evaluate test accuracy every 100 steps
