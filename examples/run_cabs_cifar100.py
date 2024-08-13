@@ -64,7 +64,7 @@ threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 # Open CSV file for logging
 csv_file = open(f'{args.result_dir}/cabs_cifar100_s{args.manual_seed}.csv', mode='w', newline='')
 csv_writer = csv.writer(csv_file)
-csv_writer.writerow(['Step', 'Loss', 'Batch Size', 'Train Accuracy', 'Train Loss', 'Test Accuracy','Time'])
+csv_writer.writerow(['Step', 'Loss', 'Batch Size', 'Train Accuracy', 'Test Accuracy','Time'])
 
 start_time = time.time()
 
