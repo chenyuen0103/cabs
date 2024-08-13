@@ -91,7 +91,7 @@ threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 csv_file = open(f'{args.result_dir}/our_cifar10_delta{delta}_s{args.manual_seed}.csv', mode='w', newline='')
 csv_writer = csv.writer(csv_file)
 # csv_writer.writerow(['Step', 'Gradient Diversity', 'Batch Size', 'Train Loss','Train Accuracy', 'Val Accuracy', 'Test Accuracy', 'Time'])
-csv_writer.writerow(['Step', 'Gradient Diversity', 'Batch Size', 'Train Loss','Train Accuracy', 'Test Accuracy', 'Time'])
+csv_writer.writerow(['Step', 'Gradient Diversity', 'Batch Size', 'Loss','Train Accuracy', 'Test Accuracy', 'Time'])
 
 
 start_time = time.time()
@@ -139,7 +139,7 @@ for i in range(num_steps):
 # val_acc = evaluate(sess, accuracy, val_images, val_labels)
 test_acc = evaluate(sess, accuracy, test_images, test_labels)
 print(f'Step {i:<4}: Grad_Div = {gd:<10.4f}, Batch Size = {m_used:<5} Train Loss = {l:<12.6f} Train Acc = {a:<12.6f} Test Accuracy = {test_acc:<8.6f}')
-csv_writer.writerow([i, gd, m_used, l,  a, None, time.time() - start_time])
+
 # Compute final test accuracy
 # Compute final test accuracy
 final_test_accuracy = evaluate(sess, accuracy, test_images, test_labels)
@@ -147,6 +147,7 @@ print(f'Final Test Accuracy: {final_test_accuracy}')
 # End timer
 end_time = time.time()
 total_time = end_time - start_time
+csv_writer.writerow([i, gd, m_used, l,  a, final_test_accuracy, time.time() - start_time])
 print(f'Total Training + Testing Time: {total_time} seconds')
 
 # Close CSV file
