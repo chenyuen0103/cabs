@@ -15,7 +15,7 @@ plot_dir = 'plots'
 avg_dir = 'averaged'
 
 # Columns for which we want to calculate the standard errors
-avg_columns = ['Loss', 'Train Loss', 'Train Accuracy', 'Test Accuracy', 'batch_size', 'Time']
+
 
 col_name_map = {'Loss': 'train_loss',
                 'Train_loss': 'train_loss',
@@ -24,6 +24,8 @@ col_name_map = {'Loss': 'train_loss',
                 'batch_size':'batch_sizes',
                 'Time': 'time'
                 }
+
+avg_columns = col_name_map.values()
 
 # Regular expression patterns to extract parameters from filenames
 pattern_cabs = re.compile(
@@ -69,6 +71,9 @@ def read_results():
             path = os.path.join(results_dir, filename)
             try:
                 df = pd.read_csv(path)
+
+                # renmae columns
+                df.rename(columns=col_name_map, inplace=True)
                 if len(df) < 100:
                     print(f"{filename} has only {len(df)} rows.")
                     continue
@@ -79,69 +84,6 @@ def read_results():
                 print(f"Error reading {path}: {e}")
     return results
 
-def process_results(results, d = 'cifar10', lr_use = 0.1, k = 5):
-    top_k_results = []
-    top_k_ours_not_eq_batch = []
-
-    for key, dfs in results.items():
-        if key[0] == "ours":
-            if not all(col in dfs[0].columns for col in avg_columns):
-                print(f"Skipping {key} due to missing columns.")
-                continue
-            if len(dfs) > 0:
-                combined_results = pd.concat(dfs).groupby(level=0)
-                # Check if all required columns are present
-
-                # Calculate mean and standard error only for specified columns
-                mean_results = combined_results[avg_columns].mean()
-                std_error_results = combined_results[avg_columns].sem()  # Standard Error of the Mean
-
-                # Rename columns for clarity
-                std_error_results = std_error_results.rename(columns=lambda x: x + '_sem')
-
-                # Keep one dataframe's non-specified columns (assuming they are the same across all dataframes)
-                other_columns = dfs[0].drop(columns=avg_columns)
-                other_columns = other_columns.groupby(level=0).first()
-
-                # Merge mean, std error, and other columns dataframes
-                combined_output = pd.concat([other_columns, mean_results, std_error_results], axis=1)
-
-                # Save to CSV
-                method, dataset, model, batch_size, lr, delta, rf = key
-                output_filename = f"{method}_{dataset}_{model}_mb{batch_size}_lr{lr}"
-                if delta is not None:
-                    output_filename += f"_delta{delta}"
-                if rf is not None:
-                    output_filename += f"_rf{rf}"
-                output_filename += f"_averaged_results.csv"
-
-                output_path = os.path.join(avg_dir, output_filename)
-                combined_output.to_csv(output_path)
-
-                # Collect the top k results based on end val_accuracy
-                val_accuracy = mean_results['val_accuracy'].iloc[-1]
-                test_accuracy = mean_results['test_accuracy'].iloc[-1]
-                end_batch = mean_results['batch_size'].iloc[-1]
-
-                top_k_results.append((key, val_accuracy, test_accuracy, end_batch))
-
-                if end_batch != batch_size:
-                    top_k_ours_not_eq_batch.append((key, val_accuracy, test_accuracy, end_batch))
-
-    # Sort the results by validation accuracy in descending order and select the top k
-    top_k_results = [x for x in top_k_results if (x[0][4] == lr_use and x[0][1] == d)]
-    top_k_ours_not_eq_batch = [x for x in top_k_ours_not_eq_batch if (x[0][4] == lr_use and x[0][1] == d)]
-    top_k_results = sorted(top_k_results, key=lambda x: x[1], reverse=True)[:k]
-    top_k_ours_not_eq_batch = sorted(top_k_ours_not_eq_batch, key=lambda x: x[1], reverse=True)[:k]
-
-    return top_k_results, top_k_ours_not_eq_batch
-
-
-def print_top_k_results(top_k_results,title):
-    print(title)
-    top_k_results = top_k_results
-    for rank, (key, val_accuracy, test_accuracy, end_batch) in enumerate(top_k_results, start=1):
-        print(f"Rank {rank}: {key}; val_accuracy = {val_accuracy}; test_accuracy = {test_accuracy}; end_batch = {end_batch}")
 
 def plot_results(results, dataset = None, lr_plot = 0.1, save = False):
     name_map = {'cabs': 'CABS', 'ours': 'DiveBatch'}
@@ -201,15 +143,13 @@ def plot_results(results, dataset = None, lr_plot = 0.1, save = False):
                         label = f'{name_map[method]} (lr={lr}, bs={batch_size}'
                         if delta is not None:
                             label = label + r', $\delta$='+ f'{delta}'
-                        if rf is not None:
-                            label += f', rf={rf}'
 
                         label += ')'
                     else:
                         if method == 'fixed':
                             label = f'{name_map[method]} ({batch_size})'
-                        elif method in ['ours', 'adabatch']:
-                            label = f'{name_map[method]} ({batch_size} - {round(batch_size_avg.iloc[-1])})'
+                        elif method in ['ours', 'cabs']:
+                            label = f'{name_map[method]})'
                         # compute the end accuracy and standard error
                         end_accuracy = mean_results.iloc[-1]
                         std_error = combined_results[metric].sem().iloc[-1]
@@ -230,17 +170,17 @@ def plot_results(results, dataset = None, lr_plot = 0.1, save = False):
             if not save:
                 plt.title(f'{dataset.upper()} (lr: {lr_plot}) - {metric.replace("_", " ").title()}')
             else:
-                plt.title(f'{dataset.upper()} (lr: {lr_plot})')
+                plt.title(f'{dataset.upper()}')
             # Create a custom legend order
-            # Sort legend entries to have 'Fixed' with smaller batch size first, followed by 'AdaBatch' and then 'DiveBatch'
+            # Sort legend entries to have 'Fixed' with smaller batch size first, followed by 'cabs' and then 'DiveBatch'
 
             if save:
                 fixed_handles_labels = [(h, l) for h, l in zip(handles, labels) if 'SGD' in l]
-                adabatch_handles_labels = [(h, l) for h, l in zip(handles, labels) if 'AdaBatch' in l]
+                cabs_handles_labels = [(h, l) for h, l in zip(handles, labels) if 'CABS' in l]
                 proposed_handles_labels = [(h, l) for h, l in zip(handles, labels) if 'DiveBatch' in l]
 
                 fixed_handles_labels = sorted(fixed_handles_labels, key=lambda x: int(re.search(r'\((\d+)\)', x[1]).group(1)))
-                sorted_handles_labels = fixed_handles_labels + adabatch_handles_labels + proposed_handles_labels
+                sorted_handles_labels = fixed_handles_labels + cabs_handles_labels + proposed_handles_labels
                 handles, labels = zip(*sorted_handles_labels)
 
             # Sort legend entries
@@ -266,7 +206,7 @@ def plot_results(results, dataset = None, lr_plot = 0.1, save = False):
 
 
 def generate_latex_table_for_epochs(results, lr_plot):
-    name_map = {'fixed': 'SGD', 'adabatch': 'AdaBatch', 'ours': '\\ourmethod'}
+    name_map = {'fixed': 'SGD', 'cabs': 'CABS', 'ours': '\\ourmethod'}
     table_content = {'cifar10': [], 'cifar100': []}
 
     for dataset in table_content.keys():
@@ -343,12 +283,12 @@ def generate_latex_table_for_epochs(results, lr_plot):
     for dataset, content in table_content.items():
         latex_table += f"\\multirow{{{len(content)}}}{{*}}{{{dataset.upper()}}} "
 
-        # Sort by Fixed - 128, Fixed - 2048, AdaBatch, \ourmethod
+        # Sort by Fixed - 128, Fixed - 2048, CABS, \ourmethod
         fixed_128 = [entry for entry in content if 'SGD - 128' in entry[0]]
         fixed_2048 = [entry for entry in content if 'SGD - 2048' in entry[0]]
-        adabatch = [entry for entry in content if 'AdaBatch' in entry[0]]
+        cabs = [entry for entry in content if 'CABS' in entry[0]]
         divebatch = [entry for entry in content if '\\ourmethod' in entry[0]]
-        sorted_content = fixed_128 + fixed_2048 + adabatch + divebatch
+        sorted_content = fixed_128 + fixed_2048 + cabs + divebatch
 
         for i, (label, avg_epoch_within_threshold, sem_epoch_within_threshold, method) in enumerate(sorted_content):
             latex_table += f"& {label} & "
@@ -366,14 +306,9 @@ def generate_latex_table_for_epochs(results, lr_plot):
     return latex_table
 
 
-# Example usage:
-# Assuming `results` is the input dictionary with data, and `lr_plot` is the learning rate of interest
-# latex_table = generate_latex_table_for_epochs(results, lr_plot=0.01)
-# print(latex_table)
-
 
 def find_avg_epochs_within_threshold(results, lr_plot):
-    name_map = {'fixed': 'SGD', 'adabatch': 'AdaBatch', 'ours': '\ourmethod'}
+    name_map = {'fixed': 'SGD', 'cabs': 'CABS', 'ours': '\ourmethod'}
     table_content = {'cifar10': [], 'cifar100': []}
     epoch_stats = {}
 
@@ -443,13 +378,6 @@ def find_avg_epochs_within_threshold(results, lr_plot):
 def main():
     create_directories()
     results = read_results()
-    # top_k_results, top_k_ours_not_eq_batch = process_results(results, d = 'cifar100', lr_use = 0.1, k = 3)
-    # # print_top_k_results(top_k_results, "Top k combinations based on validation accuracy:")
-    # print_top_k_results(top_k_ours_not_eq_batch, "Top k 'ours' combinations where end_batch != batch_size based on validation accuracy:")
-    #
-    # top_k_results, top_k_ours_not_eq_batch = process_results(results, d = 'cifar100', lr_use = 0.01, k = 3)
-    # # print_top_k_results(top_k_results, "Top k combinations based on validation accuracy:")
-    # print_top_k_results(top_k_ours_not_eq_batch, "Top k 'ours' combinations where end_batch != batch_size based on validation accuracy:")
     plot_results(results, dataset= 'cifar100', save = True)
     plot_results(results, dataset= 'cifar10', save = True)
     # latex_table = generate_latex_table(results, 0.1)
