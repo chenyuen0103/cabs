@@ -41,6 +41,13 @@ def create_directories():
     if not os.path.exists(avg_dir):
         os.makedirs(avg_dir)
 
+def reorder_columns(df):
+    df_cleaned = df.dropna(axis=1, how='all')
+    df_cleaned.columns = ['Step', 'Loss', 'Batch Size', 'Train Accuracy', 'Test Accuracy', 'Time']
+
+    return df_cleaned
+
+
 def parse_filename(filename):
     match_cabs = pattern_cabs.match(filename)
     match_ours = pattern_ours.match(filename)
@@ -74,6 +81,9 @@ def read_results():
             path = os.path.join(results_dir, filename)
             try:
                 df = pd.read_csv(path)
+                if 'cabs' in filename:
+                    df = reorder_columns(df)
+
                 # If the last step was logged twice, delete the first occurrence
 
                 # renmae columns
@@ -83,9 +93,12 @@ def read_results():
                 if len(df) < 100:
                     print(f"{filename} has only {len(df)} rows.")
                     continue
+
+                df['num_data'] = df['batch_sizes'].cumsum()
                 if key not in results:
                     results[key] = []
                 results[key].append(df)
+
             except Exception as e:
                 print(f"Error reading {path}: {e}")
     return results
@@ -170,23 +183,24 @@ def plot_results(results, dataset = None, lr_plot = 0.1, save = False):
             plt.xlabel('Step')
             # plt.ylabel(metric.replace('_', ' ').title())
             plt.ylabel(label_map[metric])
+            plt.tick_params(axis='both', which='major', labelsize=10)
             # if 'loss' in metric:
             #     plt.yscale('log')
             if not save:
-                plt.title(f'{dataset.upper()} (lr: {lr_plot}) - {metric.replace("_", " ").title()}')
+                plt.title(f'{dataset.upper()} (lr: {lr_plot}) - {metric.replace("_", " ").title()}', fontsize=12)
             else:
-                plt.title(f'{dataset.upper()}')
+                plt.title(f'{dataset.upper()}', fontsize=12)
             # Create a custom legend order
             # Sort legend entries to have 'Fixed' with smaller batch size first, followed by 'cabs' and then 'DiveBatch'
 
             if save:
                 # fixed_handles_labels = [(h, l) for h, l in zip(handles, labels) if 'SGD' in l]
-                # cabs_handles_labels = [(h, l) for h, l in zip(handles, labels) if 'CABS' in l]
+                cabs_handles_labels = [(h, l) for h, l in zip(handles, labels) if 'CABS' in l]
                 proposed_handles_labels = [(h, l) for h, l in zip(handles, labels) if 'DiveBatch' in l]
 
                 # fixed_handles_labels = sorted(fixed_handles_labels, key=lambda x: int(re.search(r'\((\d+)\)', x[1]).group(1)))
-                # sorted_handles_labels = cabs_handles_labels + proposed_handles_labels
-                sorted_handles_labels = proposed_handles_labels
+                sorted_handles_labels = cabs_handles_labels + proposed_handles_labels
+                # sorted_handles_labels = proposed_handles_labels
                 handles, labels = zip(*sorted_handles_labels)
 
             # Sort legend entries
@@ -202,13 +216,103 @@ def plot_results(results, dataset = None, lr_plot = 0.1, save = False):
             if save:
                 plt.grid(linestyle='dotted')
                 plt.legend(handles, labels, loc='best', fontsize=10)
-                plt.savefig(f'{plot_dir}/{dataset}_{metric}_lr{lr_plot}.pdf', format='pdf')
+                plt.savefig(f'{plot_dir}/{dataset}_cnn_{metric}.pdf', format='pdf')
             else:
                 plt.legend()
                 plt.show()
             plt.close()
 
 
+def plot_results_num_data(results, dataset=None, lr_plot=0.1, save=False):
+    name_map = {'cabs': 'CABS', 'our': 'DiveBatch'}
+    label_map = {'train_loss': 'Loss', 'train_acc': 'Accuracy', 'test_acc': 'Accuracy', 'batch_sizes': 'Batch Size'}
+    CB_color_cycle = ['#377eb8', '#ff7f00', '#4daf4a',
+                      '#f781bf', '#a65628', '#984ea3',
+                      '#999999', '#e41a1c', '#dede00']
+
+    method_colors = {
+        'cabs': CB_color_cycle[2],
+        'our': CB_color_cycle[3]
+    }
+
+    # Filter results for entries with at least 5 data points
+    results = {key: dfs for key, dfs in results.items() if len(dfs) >= 5}
+
+    if dataset is None:
+        dataset_list = ['cifar10', 'cifar100']
+    else:
+        dataset_list = [dataset]
+
+    for dataset in dataset_list:
+        data_results = {key: dfs for key, dfs in results.items() if key[1] == dataset}
+
+        for metric in label_map.keys():
+            if save:
+                plt.style.use(['science', 'ieee'])
+                plt.rcParams['axes.prop_cycle'] = plt.cycler(color=CB_color_cycle)
+                plt.rcParams['text.usetex'] = True
+                plt.rcParams['font.family'] = 'serif'
+                plt.rcParams['font.serif'] = ['Computer Modern Roman']
+
+            handles, labels = [], []
+            for key, dfs in data_results.items():
+                if key[1] == dataset:  # Filter by dataset
+                    method, _, delta = key
+                    combined_results = pd.concat(dfs).groupby(level=0)
+
+                    linestyle = ':' if (method == 'fixed') else '-'
+                    linewidth = 2 if (method == 'our') else 1
+                    zorder = 1 if (method == 'our') else 2
+                    color = method_colors.get(method, CB_color_cycle[0])
+
+                    if metric not in combined_results.first():
+                        print(f"Skipping {key} due to missing {metric} column.")
+                        continue
+
+                    mean_results = combined_results[metric].mean()
+                    mean_results = mean_results.ffill()  # Forward fill to handle NaN values
+
+                    # Add the "num_data" column if it doesn't exist
+                    if 'num_data' not in combined_results.first().columns:
+                        combined_results['num_data'] = combined_results['batch_sizes'].cumsum()
+
+                    # Adjust x-axis to be "num_data"
+                    x_values = combined_results['num_data'].mean()
+
+                    if not save:
+                        label = f'{name_map[method]}'
+                        if delta is not None:
+                            label = label + r'($\delta$=' + f'{delta})'
+                    else:
+                        label = f'{name_map[method]}'
+                        end_accuracy = mean_results.iloc[-1]
+                        std_error = combined_results[metric].sem().iloc[-1]
+
+                    # Plot the results with "num_data" as the x-axis
+                    if save:
+                        line, = plt.plot(x_values, mean_results, label=label, linewidth=linewidth, linestyle=linestyle, zorder=zorder, color=color)
+                        handles.append(line)
+                        labels.append(label)
+                    else:
+                        plt.plot(x_values, mean_results, label=label, linewidth=linewidth, linestyle=linestyle, zorder=zorder)
+
+            plt.xlabel('Number of Data Points')
+            plt.ylabel(label_map[metric])
+
+            if not save:
+                plt.title(f'{dataset.upper()} (lr: {lr_plot}) - {metric.replace("_", " ").title()}', fontsize=12)
+            else:
+                plt.title(f'{dataset.upper()}')
+
+            if save:
+                plt.grid(linestyle='dotted')
+                plt.legend(handles, labels, loc='best', fontsize=10)
+                plt.savefig(f'{plot_dir}/{dataset}_{metric}_lr{lr_plot}.pdf', format='pdf')
+            else:
+                plt.legend()
+                plt.show()
+
+            plt.close()
 
 
 def generate_latex_table_for_epochs(results, lr_plot):
@@ -384,8 +488,10 @@ def find_avg_epochs_within_threshold(results, lr_plot):
 def main():
     create_directories()
     results = read_results()
-    plot_results(results, dataset= 'cifar100', save = False)
-    plot_results(results, dataset= 'cifar10', save = False)
+    plot_results(results, dataset= 'cifar100', save =True)
+    plot_results(results, dataset= 'cifar10', save = True)
+    # plot_results_num_data(results, dataset= 'cifar100', save = False)
+    # plot_results_num_data(results, dataset= 'cifar10', save = False)
     # latex_table = generate_latex_table(results, 0.1)
     # threshold = find_avg_epochs_within_threshold(results, 0.1)
     # print(threshold)
